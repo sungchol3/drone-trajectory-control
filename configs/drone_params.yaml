@@ -1,0 +1,28 @@
+# Quadrotor and Payload Physical Parameters
+# Based on KAIST AE300 Flight Mechanics Final Project Model
+
+mass: 31.0                # Total mass [kg] (Drone: 30.0 kg, Payload: 1.0 kg)
+gravity: 9.80665          # Gravitational acceleration [m/s^2]
+
+# Inertia Tensor Principal Moments [kg * m^2]
+inertia:
+  Ixx: 1.25
+  Iyy: 1.25
+  Izz: 2.50
+
+# Geometry & Actuator Limits
+geometry:
+  arm_length: 0.4         # Rotor arm length from CG [m]
+  thrust_max: 600.0       # Maximum total thrust [N] (T/W approx 1.97)
+  thrust_min: 0.0         # Minimum total thrust [N]
+  torque_max:             # Maximum control torques [N * m]
+    roll: 60.0
+    pitch: 60.0
+    yaw: 20.0
+  tilt_max_deg: 35.0      # Maximum tilt angle constraint [deg]
+
+# Aerodynamic Drag Coefficients [N * s / m]
+drag:
+  dx: 0.1
+  dy: 0.1
+  dz: 0.1

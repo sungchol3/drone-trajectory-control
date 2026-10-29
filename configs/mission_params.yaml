@@ -1,0 +1,16 @@
+# Mission Profile and Simulation Parameters
+
+waypoints:
+  start_pos: [-10.0, 0.0, 10.0]     # Initial position [x, y, z] in ENU frame [m]
+  start_vel: [0.0, 0.0, 0.0]        # Initial velocity [vx, vy, vz] [m/s]
+  target_pos: [0.0, 0.0, 0.0]       # Target landing point [m]
+  target_vel: [0.0, 0.0, 0.0]       # Target touchdown velocity [m/s]
+
+timing:
+  max_time: 20.0                    # Maximum flight time [s]
+  dt_sim: 0.005                     # Integration timestep (RK4) [s] (200 Hz)
+  dt_ctrl: 0.02                     # Control loop execution timestep [s] (50 Hz)
+
+landing_criteria:
+  pos_tolerance: 0.05               # Acceptable position error for touchdown [m]
+  vel_tolerance: 0.20               # Acceptable velocity magnitude for soft landing [m/s]
