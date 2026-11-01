@@ -140,7 +140,7 @@ Phase 2 upgrades trajectory generation from heuristic waypoint FSMs to analytica
 
 1. **Closed-Form ZEM/ZEV Guidance**:
 
-   $$\mathbf{a}_{\text{thrust}}(t) = \frac{6}{t_{\text{go}}^2} \mathbf{ZEM}(t) - \frac{2}{t_{\text{go}}} \mathbf{ZEV}(t)$$
+   $$\mathbf{a}_\text{thrust}(t) = \frac{6}{t_\text{go}^2} \mathbf{ZEM}(t) - \frac{2}{t_\text{go}} \mathbf{ZEV}(t)$$
 
    where:
 
