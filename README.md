@@ -34,22 +34,26 @@ This research repository implements a benchmark framework for **optimal trajecto
 $$\mathbf{x} = [\mathbf{p}_W^T, \; \mathbf{v}_W^T, \; \mathbf{q}^T, \; \boldsymbol{\Omega}_B^T]^T \in \mathbb{R}^{13}$$
 
 1. **Translational Dynamics**:
-   $$
-   \dot{\mathbf{p}}_W = \mathbf{v}_W
-   $$
-   $$
-   m \dot{\mathbf{v}}_W = m \mathbf{g}_W + \mathbf{R}_{WB}(\mathbf{q}) \begin{bmatrix} 0 \\ 0 \\ T \end{bmatrix} - \mathbf{D}_v \mathbf{v}_W
-   $$
-   where $m = 31.0\,\text{kg}$ ($30.0\,\text{kg}$ airframe + $1.0\,\text{kg}$ delivery payload), $T$ is total rotor thrust, and $\mathbf{D}_v = \text{diag}(0.1, 0.1, 0.1)\,\text{N}\cdot\text{s/m}$ is [...]
+
+    $$
+    \dot{\mathbf{p}}_W = \mathbf{v}_W
+    $$
+    $$
+    m \dot{\mathbf{v}}_W = m \mathbf{g}_W + \mathbf{R}_{WB}(\mathbf{q}) \begin{bmatrix} 0 \\ 0 \\ T \end{bmatrix} - \mathbf{D}_v \mathbf{v}_W
+    $$
+
+    where $m = 31.0\,\text{kg}$ ($30.0\,\text{kg}$ airframe + $1.0\,\text{kg}$ delivery payload), $T$ is total rotor thrust, and $\mathbf{D}_v = \text{diag}(0.1, 0.1, 0.1)\,\text{N}\cdot\text{s/m}$ is [...]
 
 2. **Rotational Dynamics**:
-   $$
-   \dot{\mathbf{q}} = \frac{1}{2} \mathbf{q} \otimes \begin{bmatrix} 0 \\ \boldsymbol{\Omega}_B \end{bmatrix}
-   $$
-   $$
-   \mathbf{J} \dot{\boldsymbol{\Omega}}_B = -\boldsymbol{\Omega}_B \times (\mathbf{J} \boldsymbol{\Omega}_B) + \boldsymbol{\tau}_B
-   $$
-   where $\mathbf{J} = \text{diag}(1.25, 1.25, 2.50)\,\text{kg}\cdot\text{m}^2$ is the moment of inertia tensor and $\boldsymbol{\tau}_B = [\tau_x, \tau_y, \tau_z]^T$ is the 3-axis control moment.
+
+    $$
+    \dot{\mathbf{q}} = \frac{1}{2} \mathbf{q} \otimes \begin{bmatrix} 0 \\ \boldsymbol{\Omega}_B \end{bmatrix}
+    $$
+    $$
+    \mathbf{J} \dot{\boldsymbol{\Omega}}_B = -\boldsymbol{\Omega}_B \times (\mathbf{J} \boldsymbol{\Omega}_B) + \boldsymbol{\tau}_B
+    $$
+
+    where $\mathbf{J} = \text{diag}(1.25, 1.25, 2.50)\,\text{kg}\cdot\text{m}^2$ is the moment of inertia tensor and $\boldsymbol{\tau}_B = [\tau_x, \tau_y, \tau_z]^T$ is the 3-axis control moment.
 
 3. **Multi-Rate Numerical Integration**:
    - Physics integration: 4th-Order Runge-Kutta (RK4) at $200\,\text{Hz}$ ($\Delta t_{\text{sim}} = 0.005\,\text{s}$).
