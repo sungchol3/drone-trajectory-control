@@ -203,7 +203,7 @@ Phase 3 formulates finite-horizon optimal control directly handling state and ac
    - Total motor thrust saturation: $\|\mathbf{u}\_k\| \le \frac{T\_{\max}}{m} \approx 19.35\\,\mathrm{m/s}^2$
    - Terminal soft touchdown velocity: $v_{z,N} \ge -0.20\,\mathrm{m/s}$
 3. **Warm-Starting & Glideslope Reference Governor**:
-   - Solution shifting ( $\mathbf{w}\_{\mathrm{init}} = [\mathbf{x}^*\_{1:N}, \mathbf{u}^*\_{1:N-1}]$ ) enables fast &lt; 16 ms mean IPOPT solve times ($64.7\,\mathrm{Hz}$ RHC).
+   - Solution shifting ( $\mathbf{w}\_{\mathrm{init}} = [\mathbf{x}^{*}\_{1:N}, \mathbf{u}^{*}\_{1:N-1}]$ ) enables fast &lt; 16 ms mean IPOPT solve times ($64.7\,\mathrm{Hz}$ RHC).
    - Altitude reference governor maintains safe glideslope buffer until pad alignment ($r_{xy} \le 0.25\,\mathrm{m}$) before initiating terminal flare soft touchdown.
 
 ### (2) Phase 3 Unit Test Verification (`tests/test_nmpc.py`)
