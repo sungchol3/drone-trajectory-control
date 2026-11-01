@@ -235,16 +235,83 @@ python3 experiments/run_zem_zev.py --animate --speed 1.5
 python3 experiments/run_zem_zev.py --save-anim
 ```
 
+#### Phase 3: CasADi Nonlinear Model Predictive Control (NMPC)
+```bash
+# Run NMPC unit tests (5 scenarios)
+python3 tests/test_nmpc.py
+
+# Run closed-loop NMPC simulation and save plots to results/
+python3 experiments/run_nmpc.py
+
+# Launch native macOS interactive real-time 3D GUI window
+python3 experiments/run_nmpc.py --animate
+
+# Save high-resolution MP4 video to results/nmpc_animation.mp4
+python3 experiments/run_nmpc.py --save-anim
+```
+
 ---
 
-## 8. Next Step: Phase 3 Roadmap (Nonlinear MPC)
+## 8. Phase 3 Implementation: CasADi NMPC with Hard Constraints
 
-Building on the analytical optimal guidance established in Phase 2, **Phase 3 will formulate CasADi-based Nonlinear Model Predictive Control (NMPC)**:
-- **Optimal Control Problem (OCP)**:
-  $$\min_{\mathbf{x}, \mathbf{u}} \sum_{k=0}^{N-1} \left( \|\mathbf{p}_k - \mathbf{p}_f\|_{Q_p}^2 + \|\mathbf{v}_k - \mathbf{v}_f\|_{Q_v}^2 + \|\mathbf{u}_k\|_{R}^2 \right) + \|\mathbf{p}_N - \mathbf{p}_f\|_{P_p}^2 + \|\mathbf{v}_N - \mathbf{v}_f\|_{P_v}^2$$
-- **Hard Constraints**:
-  - $z_k \ge 0.0\,\text{m}$ (Explicit ground collision avoidance constraint)
-  - $0.0 \le T_k \le 600.0\,\text{N}$ (Collective motor thrust saturation)
-  - $|\theta_k| \le 35^\circ$ (Attitude tilt stability bounds)
-  - $v_{z,N} \ge -0.20\,\text{m/s}$ (Terminal soft touchdown constraint)
-- **Solver**: CasADi + IPOPT via Multiple Shooting for real-time 50 Hz receding horizon optimization.
+### (1) Mathematical Formulation & OCP Structure
+Phase 3 formulates finite-horizon optimal control directly handling state and actuator boundaries:
+1. **Multiple Shooting Discretization**:
+   - 4th-order Runge-Kutta (RK4) integration defect constraints:
+     $$\mathbf{x}_{k+1} - \mathbf{F}_{\text{RK4}}(\mathbf{x}_k, \mathbf{u}_k, \Delta t) = \mathbf{0}, \quad k = 0, \dots, N-1$$
+2. **Hard Inequality Constraints**:
+   - Ground collision avoidance: $z_k \ge z_{\min} = 0.04\,\text{m}$ ($\forall k$)
+   - 2nd-order cone tilt angle limit: $\sqrt{u_{x,k}^2 + u_{y,k}^2} \le u_{z,k} \tan(35^\circ)$
+   - Total motor thrust saturation: $\|\mathbf{u}_k\| \le \frac{T_{\max}}{m} \approx 19.35\,\text{m/s}^2$
+   - Terminal soft touchdown velocity: $v_{z,N} \ge -0.20\,\text{m/s}$
+3. **Warm-Starting & Glideslope Reference Governor**:
+   - Solution shifting ($\mathbf{w}_{\text{init}} = [\mathbf{x}^*_{1:N}, \mathbf{u}^*_{1:N-1}]$) enables fast $< 15\,\text{ms}$ mean IPOPT solve times ($71.3\,\text{Hz}$ RHC).
+   - Altitude reference governor maintains safe glideslope buffer until pad alignment ($r_{xy} \le 0.25\,\text{m}$) before initiating terminal flare soft touchdown.
+
+### (2) Phase 3 Unit Test Verification (`tests/test_nmpc.py`)
+```
+============================================================
+>>> Running Phase 3 NMPC Unit Tests
+============================================================
+[PASS] Scenario 1: OCP cold start converged (22.32 ms, status: Solve_Succeeded)
+[PASS] Scenario 2: All hard constraints strictly satisfied:
+       - Minimum altitude across horizon: 7.1868 m >= 0.0400 m
+       - Peak control acceleration: 19.3548 m/s^2 <= 19.3548 m/s^2
+       - Peak predicted tilt angle: 35.00 deg <= 35.00 deg
+[PASS] Scenario 3: Warm-start real-time efficiency verified (Mean: 12.78 ms, Rate: 78.3 Hz)
+[PASS] Scenario 4: Terminal soft touchdown constraint satisfied (vz,N = -0.2000 m/s >= -0.2000 m/s)
+[PASS] Scenario 5: NMPCController BaseController interface verified
+============================================================
+ALL PHASE 3 NMPC UNIT TESTS PASSED SUCCESSFULLY!
+============================================================
+```
+
+---
+
+## 9. Comprehensive 3-Way Comparative Benchmark: PID vs ZEM/ZEV vs NMPC
+
+The table below presents the quantitative benchmark results across all three control paradigms under identical 6-DOF simulation conditions (`start_pos = [-10, 0, 10] m`, `target_pos = [0, 0, 0] m`, mass $31.0\,\text{kg}$, 200 Hz RK4 integration):
+
+| Performance Metric | Phase 1 (Baseline PID) | Phase 2 (ZEM/ZEV + $SE(3)$) | Phase 3 (CasADi NMPC) | Improvement vs PID | Evaluation Status |
+|:---|:---:|:---:|:---:|:---:|:---:|
+| **Total Flight Time ($T_f$)** | $13.66\,\text{s}$ | $4.94\,\text{s}$ | **$5.02\,\text{s}$** | **$+63.3\%$ (FASTER)** | **PASS** ($< 6.0\,\text{s}$) |
+| **Landing Position Error** | $0.0483\,\text{m}$ | $0.0487\,\text{m}$ | **$0.0497\,\text{m}$** | **$4.97\,\text{cm}$ (Radial error $1.0\,\text{cm}$)** | **PASS** ($< 0.05\,\text{m}$) |
+| **Touchdown Velocity ($v_z$)** | $-0.1737\,\text{m/s}$ | $-0.1649\,\text{m/s}$ | **$-0.1555\,\text{m/s}$** | Ideal soft landing ($< 0.20\,\text{m/s}$) | **PASS** |
+| **Final Attitude Tilt Angle** | $0.00^\circ$ | $0.34^\circ$ | **$0.20^\circ$** | Upright terminal landing | **PASS** ($< 2.0^\circ$) |
+| **Minimum Altitude ($z_{\min}$)** | $0.0483\,\text{m}$ | $0.0481\,\text{m}$ | **$0.0487\,\text{m}$** | Zero ground crash ($\ge 0.0\,\text{m}$) | **PASS** |
+| **Total Control Effort ($\int T^2 dt$)** | $1,307,237.4\,\text{N}^2\cdot\text{s}$ | $495,969.8\,\text{N}^2\cdot\text{s}$ | **$621,136.1\,\text{N}^2\cdot\text{s}$** | **$+52.5\%$ (ENERGY SAVED)** | **PASS** |
+| **Total Input Impulse** | $21.8313\,\text{N}\cdot\text{s}$ | $14.7514\,\text{N}\cdot\text{s}$ | **$52.9684\,\text{N}\cdot\text{s}$** | Active receding horizon control | **PASS** |
+| **Mean Solve Time (Warm)** | N/A (Analytical) | $< 0.1\,\text{ms}$ ($O(1)$) | **$14.03\,\text{ms}$** | Real-time feasible ($71.3\,\text{Hz}$) | **PASS** ($< 25\,\text{ms}$) |
+| **Peak Solve Time** | N/A | $< 0.1\,\text{ms}$ | **$30.66\,\text{ms}$** | Strict upper bound | **PASS** ($< 35\,\text{ms}$) |
+| **Hard Constraint Enforcement** | Heuristic clipping | Heuristic saturation | **Exact Optimization Constraints** | Mathematically guaranteed | **SUPERIOR** |
+| **Mission Success Status** | **SUCCESS** | **SUCCESS** | **SUCCESS** | **All Benchmark Criteria Met** | **ALL PASSED** |
+
+---
+
+## 10. Next Step: Phase 4 Roadmap (Deep Reinforcement Learning & Adaptive Control)
+
+Building on the analytical and numerical optimal control foundations from Phases 1–3, **Phase 4 introduces Deep Reinforcement Learning (DRL)**:
+- **Algorithms**: Soft Actor-Critic (SAC) & Proximal Policy Optimization (PPO).
+- **Environment**: Gymnasium-compliant 6-DOF multirotor environment wrapping `Quadrotor6DOF`.
+- **Hierarchical Separation**: RL agent outputs high-level acceleration commands or reference attitudes, while inner $SE(3)$ tracking controller handles 200 Hz attitude stabilization.
+- **Domain Randomization**: Mass variations ($\pm 20\%$), wind gusts (von Kármán turbulence), and actuator delay to ensure sim-to-real transferability.
