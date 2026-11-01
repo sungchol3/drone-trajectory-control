@@ -144,27 +144,27 @@ Phase 2 upgrades trajectory generation from heuristic waypoint FSMs to analytica
 
    where:
 
-   $$\mathbf{ZEM}(t) = \mathbf{p}_{f} - \left( \mathbf{p}(t) + \mathbf{v}(t) t_{\mathrm{go}} + \frac{1}{2} \mathbf{g}_{W} t_{\mathrm{go}}^2 \right)$$
+   $$\mathbf{ZEM}(t) = \mathbf{p}\_{f} - \left( \mathbf{p}(t) + \mathbf{v}(t) t\_{\mathrm{go}} + \frac{1}{2} \mathbf{g}\_{W} t\_{\mathrm{go}}^2 \right)$$
 
-   $$\mathbf{ZEV}(t) = \mathbf{v}_{f} - \left( \mathbf{v}(t) + \mathbf{g}_{W} t_{\mathrm{go}} \right)$$
+   $$\mathbf{ZEV}(t) = \mathbf{v}\_{f} - \left( \mathbf{v}(t) + \mathbf{g}\_{W} t\_{\mathrm{go}} \right)$$
 
 2. **$O(1)$ Convex Peak Acceleration & Bisection $T_f^*$ Solver**:
 
-   Because $\mathbf{a}_{\mathrm{thrust}}(\tau) = \mathbf{c}_{0} + \mathbf{c}_{1} \tau$ is affine in time, its norm squared is strictly convex. The maximum acceleration on $\tau \in [0, t_{\mathrm{go}}]$ occurs strictly at the boundaries:
+   Because $\mathbf{a}\_{\mathrm{thrust}}(\tau) = \mathbf{c}\_{0} + \mathbf{c}\_{1} \tau$ is affine in time, its norm squared is strictly convex. The maximum acceleration on $\tau \in [0, t\_{\mathrm{go}}]$ occurs strictly at the boundaries:
 
-   $$\max_{\tau \in [0, t_{\mathrm{go}}]} \|\mathbf{a}_{\mathrm{thrust}}(\tau)\| = \max\left( \|\mathbf{a}_{\mathrm{thrust}}(0)\|, \; \|\mathbf{a}_{\mathrm{thrust}}(t_{\mathrm{go}})\| \right)$$
+   $$\max\_{\tau \in [0, t\_{\mathrm{go}}]} \|\mathbf{a}\_{\mathrm{thrust}}(\tau)\| = \max\left( \|\mathbf{a}\_{\mathrm{thrust}}(0)\|, \; \|\mathbf{a}\_{\mathrm{thrust}}(t\_{\mathrm{go}})\| \right)$$
 
    where:
 
-   $$\mathbf{a}_{\mathrm{thrust}}(0) = \frac{6}{t_{\mathrm{go}}^2}\mathbf{ZEM} - \frac{2}{t_{\mathrm{go}}}\mathbf{ZEV}, \quad \mathbf{a}_{\mathrm{thrust}}(t_{\mathrm{go}}) = -\frac{6}{t_{\mathrm{go}}^2}\mathbf{ZEM} + \frac{4}{t_{\mathrm{go}}}\mathbf{ZEV}$$
+   $$\mathbf{a}\_{\mathrm{thrust}}(0) = \frac{6}{t\_{\mathrm{go}}^2}\mathbf{ZEM} - \frac{2}{t\_{\mathrm{go}}}\mathbf{ZEV}, \quad \mathbf{a}\_{\mathrm{thrust}}(t\_{\mathrm{go}}) = -\frac{6}{t\_{\mathrm{go}}^2}\mathbf{ZEM} + \frac{4}{t\_{\mathrm{go}}}\mathbf{ZEV}$$
 
-   This enables instantaneous $O(1)$ feasibility checks, allowing a bisection search to determine the minimum flight time $T_f^*$ subject to $a_{\max} \approx 15.85\,\text{m/s}^2$ ($T_{\max} = 600\,\text{N}$, $\theta_{\max} = 35^\circ$) in &lt; 15 iterations.
+   This enables instantaneous $O(1)$ feasibility checks, allowing a bisection search to determine the minimum flight time $T_f^*$ subject to $a_{\max} \approx 15.85\\,\text{m/s}^2$ ($T_{\max} = 600\\,\text{N}$, $\theta_{\max} = 35^\circ$) in &lt; 15 iterations.
 
 3. **$SE(3)$ Geometric Tracking Controller (Lee et al., 2010)**:
-   - Orthonormal basis on $SO(3)$: $\mathbf{b}_{3,d} = \mathbf{a}_{\mathrm{thrust}} / \|\mathbf{a}_{\mathrm{thrust}}\|$, $\mathbf{b}_{2,d} = (\mathbf{b}_{3,d} \times \mathbf{b}_{1,c}) / \|\mathbf{b}_{3,d} \times \mathbf{b}_{1,c}\|$, $\mathbf{b}_{1,d} = \mathbf{b}_{2,d} \times \mathbf{b}_{3,d}$.
-   - Collective thrust: $T = m (\mathbf{a}_{\mathrm{thrust}} \cdot \mathbf{b}_3) \in [0, 600]\,\mathrm{N}$.
+   - Orthonormal basis on $SO(3)$: $\mathbf{b}\_{3,d} = \mathbf{a}\_{\mathrm{thrust}} / \|\mathbf{a}\_{\mathrm{thrust}}\|$, $\mathbf{b}\_{2,d} = (\mathbf{b}\_{3,d} \times \mathbf{b}\_{1,c}) / \|\mathbf{b}\_{3,d} \times \mathbf{b}\_{1,c}\|$, $\mathbf{b}\_{1,d} = \mathbf{b}\_{2,d} \times \mathbf{b}\_{3,d}$.
+   - Collective thrust: $T = m (\mathbf{a}\_{\mathrm{thrust}} \cdot \mathbf{b}\_3) \in [0, 600]\\,\mathrm{N}$.
    - Attitude tracking error on Lie Group $SO(3)$: $\mathbf{e}_R = \frac{1}{2} (\mathbf{R}_d^T \mathbf{R} - \mathbf{R}^T \mathbf{R}_d)^\vee$.
-   - Control torque with gyroscopic compensation: $\boldsymbol{\tau} = -k_R \mathbf{e}_R - k_\Omega \mathbf{e}_\Omega + \boldsymbol{\Omega} \times (\mathbf{J}\boldsymbol{\Omega})$.
+   - Control torque with gyroscopic compensation: $\boldsymbol{\tau} = -k\_R \mathbf{e}\_R - k\_\Omega \mathbf{e}\_\Omega + \boldsymbol{\Omega} \times (\mathbf{J}\boldsymbol{\Omega})$.
 
 ### (2) Phase 2 Unit Test Verification (`tests/test_zem_zev.py`)
 ```
