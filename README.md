@@ -140,23 +140,23 @@ Phase 2 upgrades trajectory generation from heuristic waypoint FSMs to analytica
 
 1. **Closed-Form ZEM/ZEV Guidance**:
 
-   $$\mathbf{a}_\text{thrust}(t) = \frac{6}{t_\text{go}^2} \mathbf{ZEM}(t) - \frac{2}{t_\text{go}} \mathbf{ZEV}(t)$$
+   $$\mathbf{a}_{\mathrm{thrust}}(t) = \frac{6}{t_\mathrm{go}^2} \mathbf{ZEM}(t) - \frac{2}{t_\mathrm{go}} \mathbf{ZEV}(t)$$
 
    where:
 
-   $$\mathbf{ZEM}(t) = \mathbf{p}_f - \left( \mathbf{p}(t) + \mathbf{v}(t) t_{\text{go}} + \frac{1}{2} \mathbf{g}_W t_{\text{go}}^2 \right)$$
+   $$\mathbf{ZEM}(t) = \mathbf{p}_f - \left( \mathbf{p}(t) + \mathbf{v}(t) t_{\mathrm{go}} + \frac{1}{2} \mathbf{g}_W t_{\mathrm{go}}^2 \right)$$
 
-   $$\mathbf{ZEV}(t) = \mathbf{v}_f - \left( \mathbf{v}(t) + \mathbf{g}_W t_{\text{go}} \right)$$
+   $$\mathbf{ZEV}(t) = \mathbf{v}_f - \left( \mathbf{v}(t) + \mathbf{g}_W t_{\mathrm{go}} \right)$$
 
 2. **$O(1)$ Convex Peak Acceleration & Bisection $T_f^*$ Solver**:
 
-   Because $\mathbf{a}_{\text{thrust}}(\tau) = \mathbf{c}_0 + \mathbf{c}_1 \tau$ is affine in time, its norm squared is strictly convex. The maximum acceleration on $\tau \in [0, t_{\text{go}}]$ occurs strictly at the boundaries:
+   Because $\mathbf{a}_{\mathrm{thrust}}(\tau) = \mathbf{c}_0 + \mathbf{c}_1 \tau$ is affine in time, its norm squared is strictly convex. The maximum acceleration on $\tau \in [0, t_{\mathrm{go}}]$ occurs strictly at the boundaries:
 
-   $$\max_{\tau \in [0, t_{\text{go}}]} \|\mathbf{a}_{\text{thrust}}(\tau)\| = \max\left( \|\mathbf{a}_{\text{thrust}}(0)\|, \; \|\mathbf{a}_{\text{thrust}}(t_{\text{go}})\| \right)$$
+   $$\max_{\tau \in [0, t_{\mathrm{go}}]} \|\mathbf{a}_{\mathrm{thrust}}(\tau)\| = \max\left( \|\mathbf{a}_{\mathrm{thrust}}(0)\|, \; \|\mathbf{a}_{\mathrm{thrust}}(t_{\mathrm{go}})\| \right)$$
 
    where:
 
-   $$\mathbf{a}_{\text{thrust}}(0) = \frac{6}{t_{\text{go}}^2}\mathbf{ZEM} - \frac{2}{t_{\text{go}}}\mathbf{ZEV}, \quad \mathbf{a}_{\text{thrust}}(t_{\text{go}}) = -\frac{6}{t_{\text{go}}^2}\mathbf{ZEM} + \frac{4}{t_{\text{go}}}\mathbf{ZEV}$$
+   $$\mathbf{a}_{\mathrm{thrust}}(0) = \frac{6}{t_{\mathrm{go}}^2}\mathbf{ZEM} - \frac{2}{t_{\mathrm{go}}}\mathbf{ZEV}, \quad \mathbf{a}_{\mathrm{thrust}}(t_{\mathrm{go}}) = -\frac{6}{t_{\mathrm{go}}^2}\mathbf{ZEM} + \frac{4}{t_{\mathrm{go}}}\mathbf{ZEV}$$
 
    This enables instantaneous $O(1)$ feasibility checks, allowing a bisection search to determine the minimum flight time $T_f^*$ subject to $a_{\max} \approx 15.85\,\text{m/s}^2$ ($T_{\max} = 600\,\text{N}$, $\theta_{\max} = 35^\circ$) in $< 15$ iterations.
 
@@ -195,16 +195,16 @@ Phase 3 formulates finite-horizon optimal control directly handling state and ac
 1. **Multiple Shooting Discretization**:
    - 4th-order Runge-Kutta (RK4) integration defect constraints:
 
-   $$\mathbf{x}_{k+1} - \mathbf{F}_{\text{RK4}}(\mathbf{x}_k, \mathbf{u}_k, \Delta t) = \mathbf{0}, \quad k = 0, \dots, N-1$$
+   $$\mathbf{x}_{k+1} - \mathbf{F}_{\mathrm{RK4}}(\mathbf{x}_k, \mathbf{u}_k, \Delta t) = \mathbf{0}, \quad k = 0, \dots, N-1$$
 
 2. **Hard Inequality Constraints**:
-   - Ground collision avoidance: $z_k \ge z_{\min} = 0.04\,\text{m}$ ($\forall k$)
+   - Ground collision avoidance: $z_k \ge z_{\min} = 0.04\,\mathrm{m}$ ($\forall k$)
    - 2nd-order cone tilt angle limit: $\sqrt{u_{x,k}^2 + u_{y,k}^2} \le u_{z,k} \tan(35^\circ)$
-   - Total motor thrust saturation: $\|\mathbf{u}_k\| \le \frac{T_{\max}}{m} \approx 19.35\,\text{m/s}^2$
-   - Terminal soft touchdown velocity: $v_{z,N} \ge -0.20\,\text{m/s}$
+   - Total motor thrust saturation: $\|\mathbf{u}_k\| \le \frac{T_{\max}}{m} \approx 19.35\,\mathrm{m/s}^2$
+   - Terminal soft touchdown velocity: $v_{z,N} \ge -0.20\,\mathrm{m/s}$
 3. **Warm-Starting & Glideslope Reference Governor**:
-   - Solution shifting ( $\mathbf{w}_{\text{init}} = [\mathbf{x}^*_{1:N}, \mathbf{u}^*_{1:N-1}]$ ) enables fast $< 16\,\text{ms}$ mean IPOPT solve times ($64.7\,\text{Hz}$ RHC).
-   - Altitude reference governor maintains safe glideslope buffer until pad alignment ($r_{xy} \le 0.25\,\text{m}$) before initiating terminal flare soft touchdown.
+   - Solution shifting ( $\mathbf{w}_{\mathrm{init}} = [\mathbf{x}^*_{1:N}, \mathbf{u}^*_{1:N-1}]$ ) enables fast $< 16\,\mathrm{ms}$ mean IPOPT solve times ($64.7\,\mathrm{Hz}$ RHC).
+   - Altitude reference governor maintains safe glideslope buffer until pad alignment ($r_{xy} \le 0.25\,\mathrm{m}$) before initiating terminal flare soft touchdown.
 
 ### (2) Phase 3 Unit Test Verification (`tests/test_nmpc.py`)
 ```
