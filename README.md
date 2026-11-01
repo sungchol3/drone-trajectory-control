@@ -39,7 +39,8 @@ $$\mathbf{x} = [\mathbf{p}_W^T, \\; \mathbf{v}_W^T, \\; \mathbf{q}^T, \\; \bolds
 
    <p align="center">
 
-   ![translational dynamics equation](equations/translational_dynamics_eq2.svg)
+   <img src="equations/translational_dynamics_eq2.svg#gh-light-mode-only" />
+   <img src="equations/translational_dynamics_eq2(darkmode).svg#gh-dark-mode-only"/>
 
    </p>
 
@@ -49,7 +50,8 @@ $$\mathbf{x} = [\mathbf{p}_W^T, \\; \mathbf{v}_W^T, \\; \mathbf{q}^T, \\; \bolds
 
    <p align="center">
 
-   ![\dot{\mathbf{q}} = \frac{1}{2} \mathbf{q} \otimes \begin{bmatrix} 0 \\\\ \boldsymbol{\Omega}_B \end{bmatrix}](equations/rotational_dynamics_eq1.svg)
+   <img src="equations/rotational_dynamics_eq1.svg#gh-light-mode-only" />
+   <img src="equations/rotational_dynamics_eq1(darkmode).svg#gh-dark-mode-only"/>
 
    </p>
 
