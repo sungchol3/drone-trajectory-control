@@ -142,8 +142,8 @@ def test_scenario_4_terminal_soft_touchdown():
 
 
 def test_scenario_5_nmpc_controller_interface():
-    """Verifies NMPCController conforms to BaseController and executes smoothly."""
-    print("\n--- Running Scenario 5: NMPCController Interface Conformance ---")
+    """Verifies NMPCController conforms to BaseController and tracks solver statistics."""
+    print("\n--- Running Scenario 5: NMPCController Interface & Statistics ---")
     controller = NMPCController()
     controller.reset()
 
@@ -167,20 +167,71 @@ def test_scenario_5_nmpc_controller_interface():
     assert out['torque'].shape == (3,)
     assert 0.0 <= out['thrust'] <= 600.0
 
-    print(f"  Commanded Thrust: {out['thrust']:.2f} N")
-    print(f"  Commanded Torque: {out['torque']} N*m")
-    print("  [PASS] Scenario 5: NMPCController BaseController interface verified.")
+    stats = controller.get_solver_statistics()
+    assert 'total_calls' in stats
+    assert 'success_count' in stats
+    assert 'success_rate_pct' in stats
+    assert 'fallback_count' in stats
+    assert 'fallback_rate_pct' in stats
+
+    print(f"  Commanded Thrust:     {out['thrust']:.2f} N")
+    print(f"  Commanded Torque:     {out['torque']} N*m")
+    print(f"  Initial Solver Calls: {stats['total_calls']}, Success: {stats['success_count']} ({stats['success_rate_pct']:.1f}%)")
+    print(f"  Initial Fallback:     {stats['fallback_count']} ({stats['fallback_rate_pct']:.1f}%)")
+    print("  [PASS] Scenario 5: NMPCController BaseController interface & statistics verified.")
+
+
+def test_scenario_6_visualization_integration():
+    """Verifies that NMPC simulation integrates seamlessly with utils.visualization."""
+    print("\n--- Running Scenario 6: Visualization and Animation Verification ---")
+    from utils.visualization import plot_3d_trajectory, plot_flight_telemetry
+    import yaml
+
+    root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    mission_cfg_path = os.path.join(root_dir, 'configs', 'mission_params.yaml')
+    drone_cfg_path = os.path.join(root_dir, 'configs', 'drone_params.yaml')
+
+    with open(mission_cfg_path, 'r') as f:
+        mission_cfg = yaml.safe_load(f)
+    with open(drone_cfg_path, 'r') as f:
+        drone_cfg = yaml.safe_load(f)
+
+    # Generate synthetic NMPC trajectory for visualization test
+    t_arr = np.linspace(0, 5.0, 100)
+    history = {
+        'time': t_arr,
+        'pos': np.column_stack([np.linspace(-10, 0, 100), np.zeros(100), np.linspace(10, 0.05, 100)]),
+        'vel': np.column_stack([np.ones(100) * 2.0, np.zeros(100), np.ones(100) * -2.0]),
+        'quat': np.tile([1.0, 0.0, 0.0, 0.0], (100, 1)),
+        'euler': np.zeros((100, 3)),
+        'omega': np.zeros((100, 3)),
+        'thrust': np.ones(100) * 304.0,
+        'torque': np.zeros((100, 3)),
+        'phase': np.ones(100, dtype=int),
+        'target_pos': np.tile([0.0, 0.0, 0.0], (100, 1))
+    }
+
+    test_plot_path = os.path.join(root_dir, 'results', 'test_nmpc_3d.png')
+    plot_3d_trajectory(history, mission_cfg=mission_cfg, save_path=test_plot_path, show=False)
+    assert os.path.exists(test_plot_path), f"Failed to save 3D trajectory plot: {test_plot_path}"
+    print(f"  [PASS] 3D Trajectory visual generated and verified at: {test_plot_path}")
 
 
 if __name__ == '__main__':
+    import argparse
+    parser = argparse.ArgumentParser(description="Phase 3 NMPC Unit Tests & Visualization")
+    parser.add_argument("--animate", action="store_true", help="Launch interactive 3D animation of NMPC simulation")
+    args = parser.parse_args()
+
     print("============================================================")
-    print(">>> Running Phase 3 NMPC Unit Tests")
+    print(">>> Running Phase 3 NMPC Unit Tests & Visualization Checks")
     print("============================================================")
     test_scenario_1_ocp_cold_start()
     test_scenario_2_hard_constraints_satisfaction()
     test_scenario_3_warm_start_benchmark()
     test_scenario_4_terminal_soft_touchdown()
     test_scenario_5_nmpc_controller_interface()
+    test_scenario_6_visualization_integration()
     print("============================================================")
     print("ALL PHASE 3 NMPC UNIT TESTS PASSED SUCCESSFULLY!")
     print("============================================================")

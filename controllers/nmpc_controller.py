@@ -119,24 +119,50 @@ class NMPCController(BaseController):
             tilt_max_deg=self.tilt_max_deg
         )
 
-        # 6. Controller State Buffers
+        # 6. Controller State Buffers & Solver Reliability Metrics
         self.w_opt_prev: Optional[np.ndarray] = None
         self.last_mpc_time: float = -1.0
         self.current_a_thrust_cmd: np.ndarray = np.array([0.0, 0.0, self.gravity], dtype=np.float64)
         self.predicted_traj: Optional[np.ndarray] = None
         self.phase: int = 1  # 1: High-level NMPC, 2: Terminal Flare Touchdown
         self.solve_time_history = []
-        self.fallback_count: int = 0
+
+        # Explicit solver statistics counters
+        self.nmpc_calls: int = 0
+        self.nmpc_success_count: int = 0
+        self.nmpc_fallback_count: int = 0
+        self.flare_steps: int = 0
 
     def reset(self) -> None:
-        """Resets internal warm-start buffers and states."""
+        """Resets internal warm-start buffers, states, and counters."""
         self.w_opt_prev = None
         self.last_mpc_time = -1.0
         self.current_a_thrust_cmd = np.array([0.0, 0.0, self.gravity], dtype=np.float64)
         self.predicted_traj = None
         self.phase = 1
         self.solve_time_history.clear()
-        self.fallback_count = 0
+        self.nmpc_calls = 0
+        self.nmpc_success_count = 0
+        self.nmpc_fallback_count = 0
+        self.flare_steps = 0
+
+    def get_solver_statistics(self) -> Dict[str, Any]:
+        """Returns comprehensive NMPC optimization and fallback reliability metrics."""
+        success_rate = (self.nmpc_success_count / self.nmpc_calls * 100.0) if self.nmpc_calls > 0 else 0.0
+        fallback_rate = (self.nmpc_fallback_count / self.nmpc_calls * 100.0) if self.nmpc_calls > 0 else 0.0
+        mean_time = float(np.mean(self.solve_time_history)) if len(self.solve_time_history) > 0 else 0.0
+        max_time = float(np.max(self.solve_time_history)) if len(self.solve_time_history) > 0 else 0.0
+
+        return {
+            'total_calls': self.nmpc_calls,
+            'success_count': self.nmpc_success_count,
+            'success_rate_pct': success_rate,
+            'fallback_count': self.nmpc_fallback_count,
+            'fallback_rate_pct': fallback_rate,
+            'flare_steps': self.flare_steps,
+            'mean_solve_time_ms': mean_time,
+            'max_solve_time_ms': max_time
+        }
 
     def compute_control(
         self,
@@ -160,6 +186,7 @@ class NMPCController(BaseController):
             self.phase = 2
 
         if self.phase == 2:
+            self.flare_steps += 1
             # Terminal precision flare landing: smooth sink rate and pad centering
             e_xy = self.target_pos[:2] - pos[:2]
 
@@ -196,6 +223,7 @@ class NMPCController(BaseController):
                     w_guess = self.nmpc_model.shift_solution(self.w_opt_prev)
 
                 # Solve OCP NLP via CasADi + IPOPT
+                self.nmpc_calls += 1
                 success, u0, w_opt, nmpc_info = self.nmpc_model.solve(
                     x_init=x_curr,
                     x_target=x_targ,
@@ -203,12 +231,13 @@ class NMPCController(BaseController):
                 )
 
                 if success:
+                    self.nmpc_success_count += 1
                     self.current_a_thrust_cmd = u0
                     self.w_opt_prev = w_opt
                     self.predicted_traj = nmpc_info['X_opt'][:, :3]
                 else:
                     # Emergency fallback: ZEM/ZEV guidance
-                    self.fallback_count += 1
+                    self.nmpc_fallback_count += 1
                     t_go_est = max(1.0, float(np.linalg.norm(pos - self.target_pos) / (np.linalg.norm(vel) + 1.0)))
                     self.current_a_thrust_cmd = self.fallback_guidance.compute_thrust_acceleration(
                         p=pos,
@@ -237,6 +266,9 @@ class NMPCController(BaseController):
 
         u_raw = np.array([thrust, torque[0], torque[1], torque[2]], dtype=np.float64)
 
+        succ_rate = (self.nmpc_success_count / self.nmpc_calls * 100.0) if self.nmpc_calls > 0 else 0.0
+        fall_rate = (self.nmpc_fallback_count / self.nmpc_calls * 100.0) if self.nmpc_calls > 0 else 0.0
+
         return {
             'thrust': thrust,
             'torque': torque,
@@ -251,6 +283,10 @@ class NMPCController(BaseController):
                 'tilt_deg': debug_se3['tilt_deg'],
                 'e_R': debug_se3['e_R'],
                 'e_Omega': debug_se3['e_Omega'],
-                'fallback_count': self.fallback_count
+                'total_nmpc_calls': self.nmpc_calls,
+                'nmpc_success_count': self.nmpc_success_count,
+                'nmpc_fallback_count': self.nmpc_fallback_count,
+                'nmpc_success_rate': succ_rate,
+                'nmpc_fallback_rate': fall_rate
             }
         }
