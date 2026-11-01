@@ -12,8 +12,8 @@ This research repository implements a benchmark framework for **optimal trajecto
 
 1. **Phase 1 (Baseline)**: Cascaded 3-Phase Decoupled PID Controller with Ground Flare Regulation. `[COMPLETED]`
 2. **Phase 2 (Optimal Guidance)**: Zero-Effort-Miss / Zero-Effort-Velocity (ZEM/ZEV) Guidance with $SE(3)$ Geometric Tracking Control. `[COMPLETED]`
-3. **Phase 3 (Optimal Control)**: Nonlinear Model Predictive Control (NMPC) with Rotor Input and State Constraints. `[NEXT]`
-4. **Phase 4 (Deep RL)**: Mission-Tailored Reinforcement Learning (Soft Actor-Critic, SAC).
+3. **Phase 3 (Optimal Control)**: Nonlinear Model Predictive Control (NMPC) with Rotor Input and State Constraints. `[COMPLETED]`
+4. **Phase 4 (Deep RL)**: Mission-Tailored Reinforcement Learning (Soft Actor-Critic, SAC & PPO). `[NEXT]`
 5. **Phase 5 (Benchmark & Comparison)**: Quantitative comparative analysis across flight time ($T_f$), landing accuracy ($\|\mathbf{p}_f\|$), touchdown velocity ($v_z$), energy efficiency ($\int T^2 dt$), and tilt stability.
 
 ---
@@ -36,7 +36,7 @@ $$\mathbf{x} = [\mathbf{p}_W^T, \; \mathbf{v}_W^T, \; \mathbf{q}^T, \; \boldsymb
 1. **Translational Dynamics**:
    $$\dot{\mathbf{p}}_W = \mathbf{v}_W$$
    $$m \dot{\mathbf{v}}_W = m \mathbf{g}_W + \mathbf{R}_{WB}(\mathbf{q}) \begin{bmatrix} 0 \\ 0 \\ T \end{bmatrix} - \mathbf{D}_v \mathbf{v}_W$$
-   where $m = 31.0\,\text{kg}$ ($30.0\,\text{kg}$ airframe + $1.0\,\text{kg}$ delivery payload), $T$ is total rotor thrust, and $\mathbf{D}_v = \text{diag}(0.25, 0.25, 0.35)\,\text{N}\cdot\text{s/m}$ is aerodynamic damping.
+   where $m = 31.0\,\text{kg}$ ($30.0\,\text{kg}$ airframe + $1.0\,\text{kg}$ delivery payload), $T$ is total rotor thrust, and $\mathbf{D}_v = \text{diag}(0.1, 0.1, 0.1)\,\text{N}\cdot\text{s/m}$ is aerodynamic damping.
 
 2. **Rotational Dynamics**:
    $$\dot{\mathbf{q}} = \frac{1}{2} \mathbf{q} \otimes \begin{bmatrix} 0 \\ \boldsymbol{\Omega}_B \end{bmatrix}$$
@@ -69,22 +69,26 @@ drone-trajectory-control/
 │   ├── pid_controller.py          # Phase 1: 3-Phase waypoint FSM & cascaded PID with flare
 │   ├── zem_zev_guidance.py        # Phase 2: ZEM/ZEV guidance & bisection Tf* solver
 │   ├── geometric_controller.py    # Phase 2: SE(3) geometric attitude/thrust tracking
-│   └── zem_zev_controller.py      # Phase 2: Unified ZEM/ZEV trajectory controller
+│   ├── zem_zev_controller.py      # Phase 2: Unified ZEM/ZEV trajectory controller
+│   ├── nmpc_casadi_model.py       # Phase 3: CasADi Multiple Shooting OCP builder
+│   └── nmpc_controller.py         # Phase 3: Receding horizon NMPC & SE(3) controller
 ├── experiments/
 │   ├── run_pid.py                 # Phase 1 baseline simulation & benchmark runner
-│   └── run_zem_zev.py             # Phase 2 ZEM/ZEV simulation & comparative benchmark
+│   ├── run_zem_zev.py             # Phase 2 ZEM/ZEV simulation & comparative benchmark
+│   └── run_nmpc.py                # Phase 3 CasADi NMPC simulation & 3-way benchmark
 ├── tests/
 │   ├── test_dynamics.py           # Dynamics unit tests: free fall & hover equilibrium
 │   ├── test_visualization.py      # Plot generation pipeline unit tests
 │   ├── test_animation.py          # 3D airframe geometry & video encoding unit tests
-│   └── test_zem_zev.py            # ZEM/ZEV analytical equivalence & SE(3) stability tests
+│   ├── test_zem_zev.py            # ZEM/ZEV analytical equivalence & SE(3) stability tests
+│   └── test_nmpc.py               # NMPC OCP feasibility, hard constraints & timing tests
 ├── utils/
 │   ├── __init__.py
 │   ├── metrics.py                 # Flight metrics (time, accuracy, energy, impulse)
 │   ├── visualization.py           # Static 3D trajectory & 6-subplot telemetry plots
 │   └── animation.py               # Interactive macOS real-time 3D GUI & MP4 exporter
 └── results/
-    └── .gitkeep                   # Isolated output folder for generated plots & videos
+    └── .gitkeep                   # Output folder for generated plots & MP4 animation videos
 ```
 
 ---
@@ -168,91 +172,7 @@ ALL PHASE 2 UNIT TESTS PASSED SUCCESSFULLY!
 
 ---
 
-## 6. Comprehensive Comparative Benchmark: Phase 1 (PID) vs Phase 2 (ZEM/ZEV)
-
-The table below presents the quantitative benchmark results obtained from identical 6-DOF simulation runs (`start_pos = [-10, 0, 10] m`, `target_pos = [0, 0, 0] m`, mass $31.0\,\text{kg}$, 200 Hz RK4 integration):
-
-| Performance Metric | Phase 1 (Baseline PID) | Phase 2 (ZEM/ZEV + $SE(3)$) | Benchmark Improvement | Evaluation Status |
-|:---|:---:|:---:|:---:|:---:|
-| **Total Flight Time ($T_f$)** | $13.66\,\text{s}$ | **$4.94\,\text{s}$** | **$+63.8\%$ (FASTER)** | **PASS** ($< 6.0\,\text{s}$) |
-| **Landing Position Error** | $0.0483\,\text{m}$ | **$0.0487\,\text{m}$** | $4.87\,\text{cm}$ (Radial error $< 8\,\text{mm}$) | **PASS** ($< 0.05\,\text{m}$) |
-| **Touchdown Velocity ($v_z$)** | $-0.1737\,\text{m/s}$ | **$-0.1649\,\text{m/s}$** | Soft landing preserved | **PASS** ($< 0.20\,\text{m/s}$) |
-| **Final Attitude Tilt Angle** | $0.00^\circ$ | **$0.34^\circ$** | Upright terminal landing | **PASS** ($< 2.0^\circ$) |
-| **Minimum Altitude ($z_{\min}$)** | $0.0483\,\text{m}$ | **$0.0481\,\text{m}$** | Zero ground penetration | **PASS** ($\ge 0.0\,\text{m}$) |
-| **Total Control Effort ($\int T^2 dt$)** | $1,307,237.4\,\text{N}^2\cdot\text{s}$ | **$495,969.8\,\text{N}^2\cdot\text{s}$** | **$+62.1\%$ (ENERGY SAVED)** | **PASS** |
-| **Total Input Impulse** | $21.8313\,\text{N}\cdot\text{s}$ | **$14.7514\,\text{N}\cdot\text{s}$** | **$+32.4\%$ Smoother input** | **PASS** |
-| **Trajectory Profile** | 3-Phase Piecewise Linear | **Smooth 3D Optimal Powered Descent** | No artificial waypoint stops | **SUPERIOR** |
-| **Overall Mission Status** | **SUCCESS** | **SUCCESS** | **Phase 2 Benchmark Verified** | **ALL PASSED** |
-
----
-
-## 7. How to Run
-
-### (1) Setup Environment
-```bash
-pip install -r requirements.txt
-```
-
-### (2) Execute Unit Tests
-```bash
-# Phase 1: Physical dynamics & energy conservation tests
-python3 tests/test_dynamics.py
-
-# Phase 1: Visualization and animation integrity tests
-python3 tests/test_visualization.py
-python3 tests/test_animation.py
-
-# Phase 2: ZEM/ZEV analytical equivalence & SE(3) Lyapunov stability tests
-python3 tests/test_zem_zev.py
-```
-
-### (3) Run Simulations & Interactive 3D Animations
-
-#### Phase 1: Baseline 3-Phase PID Simulation
-```bash
-# Run simulation and save plots to results/
-python3 experiments/run_pid.py
-
-# Launch native macOS interactive real-time 3D GUI window
-python3 experiments/run_pid.py --animate
-
-# Save high-resolution MP4 video to results/pid_baseline_animation.mp4
-python3 experiments/run_pid.py --save-anim
-```
-
-#### Phase 2: ZEM/ZEV Optimal Guidance Simulation
-```bash
-# Run simulation and save plots to results/
-python3 experiments/run_zem_zev.py
-
-# Launch native macOS interactive real-time 3D GUI window
-python3 experiments/run_zem_zev.py --animate
-
-# Play at 1.5x speed
-python3 experiments/run_zem_zev.py --animate --speed 1.5
-
-# Save high-resolution MP4 video to results/zem_zev_animation.mp4
-python3 experiments/run_zem_zev.py --save-anim
-```
-
-#### Phase 3: CasADi Nonlinear Model Predictive Control (NMPC)
-```bash
-# Run NMPC unit tests (5 scenarios)
-python3 tests/test_nmpc.py
-
-# Run closed-loop NMPC simulation and save plots to results/
-python3 experiments/run_nmpc.py
-
-# Launch native macOS interactive real-time 3D GUI window
-python3 experiments/run_nmpc.py --animate
-
-# Save high-resolution MP4 video to results/nmpc_animation.mp4
-python3 experiments/run_nmpc.py --save-anim
-```
-
----
-
-## 8. Phase 3 Implementation: CasADi NMPC with Hard Constraints
+## 6. Phase 3 Implementation: CasADi NMPC with Hard Constraints
 
 ### (1) Mathematical Formulation & OCP Structure
 Phase 3 formulates finite-horizon optimal control directly handling state and actuator boundaries:
@@ -265,22 +185,23 @@ Phase 3 formulates finite-horizon optimal control directly handling state and ac
    - Total motor thrust saturation: $\|\mathbf{u}_k\| \le \frac{T_{\max}}{m} \approx 19.35\,\text{m/s}^2$
    - Terminal soft touchdown velocity: $v_{z,N} \ge -0.20\,\text{m/s}$
 3. **Warm-Starting & Glideslope Reference Governor**:
-   - Solution shifting ($\mathbf{w}_{\text{init}} = [\mathbf{x}^*_{1:N}, \mathbf{u}^*_{1:N-1}]$) enables fast $< 15\,\text{ms}$ mean IPOPT solve times ($71.3\,\text{Hz}$ RHC).
+   - Solution shifting ($\mathbf{w}_{\text{init}} = [\mathbf{x}^*_{1:N}, \mathbf{u}^*_{1:N-1}]$) enables fast $< 16\,\text{ms}$ mean IPOPT solve times ($64.7\,\text{Hz}$ RHC).
    - Altitude reference governor maintains safe glideslope buffer until pad alignment ($r_{xy} \le 0.25\,\text{m}$) before initiating terminal flare soft touchdown.
 
 ### (2) Phase 3 Unit Test Verification (`tests/test_nmpc.py`)
 ```
 ============================================================
->>> Running Phase 3 NMPC Unit Tests
+>>> Running Phase 3 NMPC Unit Tests & Visualization Checks
 ============================================================
-[PASS] Scenario 1: OCP cold start converged (22.32 ms, status: Solve_Succeeded)
+[PASS] Scenario 1: OCP cold start converged (58.41 ms, status: Solve_Succeeded)
 [PASS] Scenario 2: All hard constraints strictly satisfied:
-       - Minimum altitude across horizon: 7.1868 m >= 0.0400 m
+       - Minimum altitude across horizon: 7.2559 m >= 0.0400 m
        - Peak control acceleration: 19.3548 m/s^2 <= 19.3548 m/s^2
        - Peak predicted tilt angle: 35.00 deg <= 35.00 deg
-[PASS] Scenario 3: Warm-start real-time efficiency verified (Mean: 12.78 ms, Rate: 78.3 Hz)
+[PASS] Scenario 3: Warm-start real-time efficiency verified (Mean: 12.77 ms, Rate: 78.3 Hz)
 [PASS] Scenario 4: Terminal soft touchdown constraint satisfied (vz,N = -0.2000 m/s >= -0.2000 m/s)
-[PASS] Scenario 5: NMPCController BaseController interface verified
+[PASS] Scenario 5: NMPCController BaseController interface & statistics verified
+[PASS] Scenario 6: 3D Trajectory visual generated and verified at results/test_nmpc_3d.png
 ============================================================
 ALL PHASE 3 NMPC UNIT TESTS PASSED SUCCESSFULLY!
 ============================================================
@@ -288,8 +209,24 @@ ALL PHASE 3 NMPC UNIT TESTS PASSED SUCCESSFULLY!
 
 ---
 
-## 9. Comprehensive 3-Way Comparative Benchmark: PID vs ZEM/ZEV vs NMPC
+## 7. Comprehensive 3-Way Comparative Benchmark: PID vs ZEM/ZEV vs NMPC
 
+### (1) NMPC Optimization & Reliability Diagnostics
+In the 6-DOF closed-loop simulation, the NMPC solver demonstrated flawless convergence reliability:
+```
+------------------------------------------------------------------------------------------
+           NMPC OPTIMIZATION CONVERGENCE & FALLBACK RELIABILITY STATISTICS
+------------------------------------------------------------------------------------------
+Total NMPC Solver Invocations:         84 calls
+Optimal Solutions Succeeded:           84 / 84 (100.0%) -> [PASS]
+Fallback to ZEM/ZEV Guidance:           0 / 84 (  0.0%) -> [PASS]
+Terminal Precision Flare Steps:        84 steps (z <= 0.80 m)
+Average Solve Time (Warm-Start):     15.46 ms (64.7 Hz effective rate)
+Peak Solve Time across Mission:      32.76 ms (< 35.0 ms real-time ceiling)
+------------------------------------------------------------------------------------------
+```
+
+### (2) Quantitative Benchmark Scoreboard
 The table below presents the quantitative benchmark results across all three control paradigms under identical 6-DOF simulation conditions (`start_pos = [-10, 0, 10] m`, `target_pos = [0, 0, 0] m`, mass $31.0\,\text{kg}$, 200 Hz RK4 integration):
 
 | Performance Metric | Phase 1 (Baseline PID) | Phase 2 (ZEM/ZEV + $SE(3)$) | Phase 3 (CasADi NMPC) | Improvement vs PID | Evaluation Status |
@@ -310,7 +247,74 @@ The table below presents the quantitative benchmark results across all three con
 
 ---
 
-## 10. Next Step: Phase 4 Roadmap (Deep Reinforcement Learning & Adaptive Control)
+## 8. How to Run
+
+### (1) Setup Environment
+```bash
+# Install required Python packages
+pip install -r requirements.txt
+```
+
+### (2) Execute Unit Tests
+```bash
+# Phase 1: Physical dynamics & energy conservation tests
+python3 tests/test_dynamics.py
+
+# Phase 1: Visualization and animation integrity tests
+python3 tests/test_visualization.py
+python3 tests/test_animation.py
+
+# Phase 2: ZEM/ZEV analytical equivalence & SE(3) Lyapunov stability tests
+python3 tests/test_zem_zev.py
+
+# Phase 3: CasADi NMPC OCP feasibility, hard constraints & timing tests
+python3 tests/test_nmpc.py
+```
+
+### (3) Run Simulations & Interactive 3D Animations
+
+#### 1. Phase 1: Baseline 3-Phase PID Simulation
+```bash
+# Run simulation and save plots to results/
+python3 experiments/run_pid.py
+
+# Launch native macOS interactive real-time 3D GUI window
+python3 experiments/run_pid.py --animate
+
+# Save high-resolution MP4 video to results/pid_baseline_animation.mp4
+python3 experiments/run_pid.py --save-anim
+```
+
+#### 2. Phase 2: ZEM/ZEV Optimal Guidance Simulation
+```bash
+# Run simulation and save plots to results/
+python3 experiments/run_zem_zev.py
+
+# Launch native macOS interactive real-time 3D GUI window
+python3 experiments/run_zem_zev.py --animate
+
+# Play at 1.5x speed
+python3 experiments/run_zem_zev.py --animate --speed 1.5
+
+# Save high-resolution MP4 video to results/zem_zev_animation.mp4
+python3 experiments/run_zem_zev.py --save-anim
+```
+
+#### 3. Phase 3: CasADi Nonlinear Model Predictive Control (NMPC)
+```bash
+# Run closed-loop NMPC simulation (automatically saves plots and MP4 video)
+python3 experiments/run_nmpc.py
+
+# Launch native macOS interactive real-time 3D GUI window
+python3 experiments/run_nmpc.py --animate
+
+# Directly view generated high-resolution MP4 animation video on macOS
+open results/nmpc_animation.mp4
+```
+
+---
+
+## 9. Next Step: Phase 4 Roadmap (Deep Reinforcement Learning & Adaptive Control)
 
 Building on the analytical and numerical optimal control foundations from Phases 1–3, **Phase 4 introduces Deep Reinforcement Learning (DRL)**:
 - **Algorithms**: Soft Actor-Critic (SAC) & Proximal Policy Optimization (PPO).
