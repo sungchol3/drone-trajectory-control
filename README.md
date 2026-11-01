@@ -36,9 +36,10 @@ $$\mathbf{x} = [\mathbf{p}_W^T, \; \mathbf{v}_W^T, \; \mathbf{q}^T, \; \boldsymb
 1. **Translational Dynamics**:
 
    $$\begin{gathered}
-   \dot{\mathbf{p}}_W = \mathbf{v}_W \cr
-   m \dot{\mathbf{v}}_W = m \mathbf{g}_W + \mathbf{R}_{WB}(\mathbf{q}) \begin{bmatrix} 0 \cr 0 \cr T \end{bmatrix} - \mathbf{D}_v \mathbf{v}_W
+   \dot{\mathbf{p}}\_W = \mathbf{v}\_W \cr
+   m \dot{\mathbf{v}}\_W = m \mathbf{g}\_W + \mathbf{R}\_{WB}(\mathbf{q}) \begin{bmatrix} 0 \cr 0 \cr T \end{bmatrix} - \mathbf{D}\_v \mathbf{v}\_W
    \end{gathered}$$
+
    where $m = 31.0\,\text{kg}$ ($30.0\,\text{kg}$ airframe + $1.0\,\text{kg}$ delivery payload), $T$ is total rotor thrust, and $\mathbf{D}_v = \text{diag}(0.1, 0.1, 0.1)\,\text{N}\cdot\text{s/m}$ is aerodynamic damping.
 
 2. **Rotational Dynamics**:
