@@ -37,9 +37,7 @@ $$\mathbf{x} = [\mathbf{p}_W^T, \; \mathbf{v}_W^T, \; \mathbf{q}^T, \; \boldsymb
 
    $$\dot{\mathbf{p}}_W = \mathbf{v}_W$$
 
-   $$
-   m \dot{\mathbf{v}}_W = m \mathbf{g}_W + \mathbf{R}_{WB}(\mathbf{q}) \begin{bmatrix} 0 \\\\ 0 \\\\ T \end{bmatrix} - \mathbf{D}_v \mathbf{v}_W
-   $$
+   $$m \dot{\mathbf{v}}_W = m \mathbf{g}_W + \mathbf{R}_{WB}(\mathbf{q}) \begin{bmatrix} 0 \\\\ 0 \\\\ T \end{bmatrix} - \mathbf{D}_v \mathbf{v}_W$$
 
    where $m = 31.0\,\text{kg}$ ($30.0\,\text{kg}$ airframe + $1.0\,\text{kg}$ delivery payload), $T$ is total rotor thrust, and $\mathbf{D}_v = \text{diag}(0.1, 0.1, 0.1)\,\text{N}\cdot\text{s/m}$ is aerodynamic damping.
 
@@ -142,17 +140,17 @@ Phase 2 upgrades trajectory generation from heuristic waypoint FSMs to analytica
 
 1. **Closed-Form ZEM/ZEV Guidance**:
 
-   $$\mathbf{a}_{\mathrm{thrust}}(t) = \frac{6}{t_\mathrm{go}^2} \mathbf{ZEM}(t) - \frac{2}{t_\mathrm{go}} \mathbf{ZEV}(t)$$
+   $$\mathbf{a}_{\mathrm{thrust}}(t) = \frac{6}{t_{\mathrm{go}}^2} \mathbf{ZEM}(t) - \frac{2}{t_{\mathrm{go}}} \mathbf{ZEV}(t)$$
 
    where:
 
-   $$\mathbf{ZEM}(t) = \mathbf{p}_f - \left( \mathbf{p}(t) + \mathbf{v}(t) t_{\mathrm{go}} + \frac{1}{2} \mathbf{g}_W t_{\mathrm{go}}^2 \right)$$
+   $$\mathbf{ZEM}(t) = \mathbf{p}_{f} - \left( \mathbf{p}(t) + \mathbf{v}(t) t_{\mathrm{go}} + \frac{1}{2} \mathbf{g}_{W} t_{\mathrm{go}}^2 \right)$$
 
-   $$\mathbf{ZEV}(t) = \mathbf{v}_f - \left( \mathbf{v}(t) + \mathbf{g}_W t_{\mathrm{go}} \right)$$
+   $$\mathbf{ZEV}(t) = \mathbf{v}_{f} - \left( \mathbf{v}(t) + \mathbf{g}_{W} t_{\mathrm{go}} \right)$$
 
 2. **$O(1)$ Convex Peak Acceleration & Bisection $T_f^*$ Solver**:
 
-   Because $\mathbf{a}_{\mathrm{thrust}}(\tau) = \mathbf{c}_0 + \mathbf{c}_1 \tau$ is affine in time, its norm squared is strictly convex. The maximum acceleration on $\tau \in [0, t_{\mathrm{go}}]$ occurs strictly at the boundaries:
+   Because $\mathbf{a}_{\mathrm{thrust}}(\tau) = \mathbf{c}_{0} + \mathbf{c}_{1} \tau$ is affine in time, its norm squared is strictly convex. The maximum acceleration on $\tau \in [0, t_{\mathrm{go}}]$ occurs strictly at the boundaries:
 
    $$\max_{\tau \in [0, t_{\mathrm{go}}]} \|\mathbf{a}_{\mathrm{thrust}}(\tau)\| = \max\left( \|\mathbf{a}_{\mathrm{thrust}}(0)\|, \; \|\mathbf{a}_{\mathrm{thrust}}(t_{\mathrm{go}})\| \right)$$
 
@@ -163,8 +161,8 @@ Phase 2 upgrades trajectory generation from heuristic waypoint FSMs to analytica
    This enables instantaneous $O(1)$ feasibility checks, allowing a bisection search to determine the minimum flight time $T_f^*$ subject to $a_{\max} \approx 15.85\,\text{m/s}^2$ ($T_{\max} = 600\,\text{N}$, $\theta_{\max} = 35^\circ$) in $< 15$ iterations.
 
 3. **$SE(3)$ Geometric Tracking Controller (Lee et al., 2010)**:
-   - Orthonormal basis on $SO(3)$: $\mathbf{b}_{3,d} = \mathbf{a}_{\text{thrust}} / \|\mathbf{a}_{\text{thrust}}\|$, $\mathbf{b}_{2,d} = (\mathbf{b}_{3,d} \times \mathbf{b}_{1,c}) / \|\mathbf{b}_{3,d} \times \mathbf{b}_{1,c}\|$, $\mathbf{b}_{1,d} = \mathbf{b}_{2,d} \times \mathbf{b}_{3,d}$.
-   - Collective thrust: $T = m (\mathbf{a}_{\text{thrust}} \cdot \mathbf{b}_3) \in [0, 600]\,\text{N}$.
+   - Orthonormal basis on $SO(3)$: $\mathbf{b}_{3,d} = \mathbf{a}_{\mathrm{thrust}} / \|\mathbf{a}_{\mathrm{thrust}}\|$, $\mathbf{b}_{2,d} = (\mathbf{b}_{3,d} \times \mathbf{b}_{1,c}) / \|\mathbf{b}_{3,d} \times \mathbf{b}_{1,c}\|$, $\mathbf{b}_{1,d} = \mathbf{b}_{2,d} \times \mathbf{b}_{3,d}$.
+   - Collective thrust: $T = m (\mathbf{a}_{\mathrm{thrust}} \cdot \mathbf{b}_3) \in [0, 600]\,\mathrm{N}$.
    - Attitude tracking error on Lie Group $SO(3)$: $\mathbf{e}_R = \frac{1}{2} (\mathbf{R}_d^T \mathbf{R} - \mathbf{R}^T \mathbf{R}_d)^\vee$.
    - Control torque with gyroscopic compensation: $\boldsymbol{\tau} = -k_R \mathbf{e}_R - k_\Omega \mathbf{e}_\Omega + \boldsymbol{\Omega} \times (\mathbf{J}\boldsymbol{\Omega})$.
 
