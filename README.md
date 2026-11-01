@@ -195,15 +195,15 @@ Phase 3 formulates finite-horizon optimal control directly handling state and ac
 1. **Multiple Shooting Discretization**:
    - 4th-order Runge-Kutta (RK4) integration defect constraints:
 
-   $$\mathbf{x}_{k+1} - \mathbf{F}_{\mathrm{RK4}}(\mathbf{x}_k, \mathbf{u}_k, \Delta t) = \mathbf{0}, \quad k = 0, \dots, N-1$$
+   $$\mathbf{x}\_{k+1} - \mathbf{F}\_{\mathrm{RK4}}(\mathbf{x}\_k, \mathbf{u}\_k, \Delta t) = \mathbf{0}, \quad k = 0, \dots, N-1$$
 
 2. **Hard Inequality Constraints**:
    - Ground collision avoidance: $z_k \ge z_{\min} = 0.04\,\mathrm{m}$ ($\forall k$)
    - 2nd-order cone tilt angle limit: $\sqrt{u_{x,k}^2 + u_{y,k}^2} \le u_{z,k} \tan(35^\circ)$
-   - Total motor thrust saturation: $\|\mathbf{u}_k\| \le \frac{T_{\max}}{m} \approx 19.35\,\mathrm{m/s}^2$
+   - Total motor thrust saturation: $\|\mathbf{u}\_k\| \le \frac{T\_{\max}}{m} \approx 19.35\\,\mathrm{m/s}^2$
    - Terminal soft touchdown velocity: $v_{z,N} \ge -0.20\,\mathrm{m/s}$
 3. **Warm-Starting & Glideslope Reference Governor**:
-   - Solution shifting ( $\mathbf{w}_{\mathrm{init}} = [\mathbf{x}^*_{1:N}, \mathbf{u}^*_{1:N-1}]$ ) enables fast $< 16\,\mathrm{ms}$ mean IPOPT solve times ($64.7\,\mathrm{Hz}$ RHC).
+   - Solution shifting ( $\mathbf{w}\_{\mathrm{init}} = [\mathbf{x}^*\_{1:N}, \mathbf{u}^*\_{1:N-1}]$ ) enables fast &lt; 16 ms mean IPOPT solve times ($64.7\,\mathrm{Hz}$ RHC).
    - Altitude reference governor maintains safe glideslope buffer until pad alignment ($r_{xy} \le 0.25\,\mathrm{m}$) before initiating terminal flare soft touchdown.
 
 ### (2) Phase 3 Unit Test Verification (`tests/test_nmpc.py`)
