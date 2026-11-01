@@ -23,7 +23,7 @@ This research repository implements a benchmark framework for **optimal trajecto
 ### (1) Coordinate Frames
 - **Inertial World Frame ($\mathcal{F}_W$)**: Standard **East-North-Up (ENU)** coordinate system.
   - $+X_W$: East, $+Y_W$: North, $+Z_W$: Up (Altitude).
-  - Gravity vector: $\mathbf{g}_W = [0, 0, -9.80665]^T\,\text{m/s}^2$.
+  - Gravity vector: $\mathbf{g}_W = [0, 0, -9.80665]^T\\,\text{m/s}^2$.
 - **Body-Fixed Frame ($\mathcal{F}_B$)**:
   - $+X_B$: Forward (Vehicle Heading), $+Y_B$: Left, $+Z_B$: Upward (Total thrust axis).
 - **Attitude Representation**:
@@ -31,15 +31,15 @@ This research repository implements a benchmark framework for **optimal trajecto
   - Rotation matrix $\mathbf{R}_{WB}(\mathbf{q}) \in SO(3)$ transforms vectors from $\mathcal{F}_B$ to $\mathcal{F}_W$.
 
 ### (2) 13-State Nonlinear 6-DOF Equations of Motion
-$$\mathbf{x} = [\mathbf{p}_W^T, \; \mathbf{v}_W^T, \; \mathbf{q}^T, \; \boldsymbol{\Omega}_B^T]^T \in \mathbb{R}^{13}$$
+$$\mathbf{x} = [\mathbf{p}_W^T, \\; \mathbf{v}_W^T, \\; \mathbf{q}^T, \\; \boldsymbol{\Omega}_B^T]^T \in \mathbb{R}^{13}$$
 
 1. **Translational Dynamics**:
 
    $$\dot{\mathbf{p}}_W = \mathbf{v}_W$$
 
-   $$m \dot{\mathbf{v}}_W = m \mathbf{g}_W + \mathbf{R}_{WB}(\mathbf{q}) \begin{bmatrix} 0 \\\\ 0 \\\\ T \end{bmatrix} - \mathbf{D}_v \mathbf{v}_W$$
+   $$m \dot{\mathbf{v}}_W = m \mathbf{g}_W + \mathbf{R}_{WB}(\mathbf{q}) \begin{bmatrix} 0 \\ 0 \\ T \end{bmatrix} - \mathbf{D}_v \mathbf{v}_W$$
 
-   where $m = 31.0\,\text{kg}$ ($30.0\,\text{kg}$ airframe + $1.0\,\text{kg}$ delivery payload), $T$ is total rotor thrust, and $\mathbf{D}_v = \text{diag}(0.1, 0.1, 0.1)\\,\text{N}\cdot\text{s/m}$ is aerodynamic damping.
+   where $m = 31.0\\,\text{kg}$ ($30.0\\,\text{kg}$ airframe + $1.0\\,\text{kg}$ delivery payload), $T$ is total rotor thrust, and $\mathbf{D}_v = \text{diag}(0.1, 0.1, 0.1)\\,\text{N}\cdot\text{s/m}$ is aerodynamic damping.
 
 2. **Rotational Dynamics**:
 
@@ -202,7 +202,7 @@ Phase 3 formulates finite-horizon optimal control directly handling state and ac
      $$\mathbf{x}\_{k+1} - \mathbf{F}\_{\mathrm{RK4}}(\mathbf{x}\_k, \mathbf{u}\_k, \Delta t) = \mathbf{0}, \quad k = 0, \dots, N-1$$
 
 2. **Hard Inequality Constraints**:
-   - Ground collision avoidance: $z_k \ge z_{\min} = 0.04\,\mathrm{m}$ ($\forall k$)
+   - Ground collision avoidance: $z_k \ge z_{\min} = 0.04\\,\mathrm{m}$ ($\forall k$)
    - 2nd-order cone tilt angle limit: $\sqrt{u_{x,k}^2 + u_{y,k}^2} \le u_{z,k} \tan(35^\circ)$
    - Total motor thrust saturation: $\|\mathbf{u}\_k\| \le \frac{T\_{\max}}{m} \approx 19.35\\,\mathrm{m/s}^2$
    - Terminal soft touchdown velocity: $v_{z,N} \ge -0.20\\,\mathrm{m/s}$
@@ -262,7 +262,7 @@ The table below presents the quantitative benchmark results across all three con
 | **Total Input Impulse** | $21.8313\\,\text{N}\cdot\text{s}$ | $14.7514\\,\text{N}\cdot\text{s}$ | **$52.9684\\,\text{N}\cdot\text{s}$** | Active receding horizon control | **PASS** |
 | **NMPC Optimal Success Rate** | N/A | N/A | **$100.0\%$ (84/84 Solved)** | Zero IPOPT divergence | **PASS** |
 | **ZEM/ZEV Fallback Rate** | N/A | N/A | **$0.0\%$ (0/84 Switched)** | 100% pure NMPC flight | **PASS** |
-| **Mean Solve Time (Warm)** | N/A (Analytical) | $< 0.1\\,\text{ms}$ ($O(1)$) | **$15.46\\,\text{ms}$** | Real-time feasible ($64.7\\,\text{Hz}$) | **PASS** ($< 25\\,\text{ms}$) |
+| **Mean Solve Time (Warm)** | N/A (Analytical) | $< 0.1\\,\text{ms}\\; \left(O(1)\right)$ | **$15.46\\,\text{ms}$** | Real-time feasible ($64.7\\,\text{Hz}$) | **PASS** ($< 25\\,\text{ms}$) |
 | **Peak Solve Time** | N/A | $< 0.1\\,\text{ms}$ | **$32.76\\,\text{ms}$** | Strict upper bound | **PASS** ($< 35\,\text{ms}$) |
 | **Hard Constraint Enforcement** | Heuristic clipping | Heuristic saturation | **Exact Optimization Constraints** | Mathematically guaranteed | **SUPERIOR** |
 | **Mission Success Status** | **SUCCESS** | **SUCCESS** | **SUCCESS** | **All Benchmark Criteria Met** | **ALL PASSED** |
