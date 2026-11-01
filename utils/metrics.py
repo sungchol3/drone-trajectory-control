@@ -71,7 +71,8 @@ def calculate_flight_metrics(
     control_effort = 0.0
     if thrust is not None and torque is not None:
         effort_arr = (thrust ** 2) + np.sum(torque ** 2, axis=1)
-        control_effort = float(np.trapz(effort_arr, time))
+        trapz_fn = getattr(np, 'trapezoid', getattr(np, 'trapz', None))
+        control_effort = float(trapz_fn(effort_arr, time))
 
     # 5. Total Impulse (Smoothness metric)
     total_impulse = 0.0
