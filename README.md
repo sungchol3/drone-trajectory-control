@@ -34,13 +34,21 @@ This research repository implements a benchmark framework for **optimal trajecto
 $$\mathbf{x} = [\mathbf{p}_W^T, \; \mathbf{v}_W^T, \; \mathbf{q}^T, \; \boldsymbol{\Omega}_B^T]^T \in \mathbb{R}^{13}$$
 
 1. **Translational Dynamics**:
-   $$\dot{\mathbf{p}}_W = \mathbf{v}_W$$
-   $$m \dot{\mathbf{v}}_W = m \mathbf{g}_W + \mathbf{R}_{WB}(\mathbf{q}) \begin{bmatrix} 0 \\ 0 \\ T \end{bmatrix} - \mathbf{D}_v \mathbf{v}_W$$
+   $$
+   \dot{\mathbf{p}}_W = \mathbf{v}_W
+   $$
+   $$
+   m \dot{\mathbf{v}}_W = m \mathbf{g}_W + \mathbf{R}_{WB}(\mathbf{q}) \begin{bmatrix} 0 \\ 0 \\ T \end{bmatrix} - \mathbf{D}_v \mathbf{v}_W
+   $$
    where $m = 31.0\,\text{kg}$ ($30.0\,\text{kg}$ airframe + $1.0\,\text{kg}$ delivery payload), $T$ is total rotor thrust, and $\mathbf{D}_v = \text{diag}(0.1, 0.1, 0.1)\,\text{N}\cdot\text{s/m}$ is aerodynamic damping.
 
 2. **Rotational Dynamics**:
-   $$\dot{\mathbf{q}} = \frac{1}{2} \mathbf{q} \otimes \begin{bmatrix} 0 \\ \boldsymbol{\Omega}_B \end{bmatrix}$$
-   $$\mathbf{J} \dot{\boldsymbol{\Omega}}_B = -\boldsymbol{\Omega}_B \times (\mathbf{J} \boldsymbol{\Omega}_B) + \boldsymbol{\tau}_B$$
+   $$
+   \dot{\mathbf{q}} = \frac{1}{2} \mathbf{q} \otimes \begin{bmatrix} 0 \\ \boldsymbol{\Omega}_B \end{bmatrix}
+   $$
+   $$
+   \mathbf{J} \dot{\boldsymbol{\Omega}}_B = -\boldsymbol{\Omega}_B \times (\mathbf{J} \boldsymbol{\Omega}_B) + \boldsymbol{\tau}_B
+   $$
    where $\mathbf{J} = \text{diag}(1.25, 1.25, 2.50)\,\text{kg}\cdot\text{m}^2$ is the moment of inertia tensor and $\boldsymbol{\tau}_B = [\tau_x, \tau_y, \tau_z]^T$ is the 3-axis control moment.
 
 3. **Multi-Rate Numerical Integration**:
@@ -102,7 +110,9 @@ In legacy MATLAB simulations, 3-DOF point-mass approximations relied on artifici
 1. **Phase 1 (Vertical Descent)**: $(-10, 0, 10) \to (-10, 0, 5)\,\text{m}$ without pitching.
 2. **Phase 2 (Horizontal Cruise)**: Altitude locked at $z = 5.0\,\text{m}$ with cruise speed bounded to $v_x \le 3.6\,\text{m/s}$. Horizontal velocity fully arrested over the target pad ($|v_x| < 0.6\,\text{m/s}$).
 3. **Phase 3 (Precision Flare Landing)**: Pure vertical descent over pad with altitude-dependent flare sink-rate regulation:
-   $$v_{z,\text{des}}(z) = -\text{clip}(0.12 + 0.50 z, \; 0.12, \; 2.2)\quad [\text{m/s}]$$
+   $$
+   v_{z,\text{des}}(z) = -\text{clip}(0.12 + 0.50 z, \; 0.12, \; 2.2)\quad [\text{m/s}]
+   $$
 
 ### (3) Baseline Verification Scoreboard
 ```
@@ -132,16 +142,28 @@ In legacy MATLAB simulations, 3-DOF point-mass approximations relied on artifici
 Phase 2 upgrades trajectory generation from heuristic waypoint FSMs to analytical energy-optimal powered descent guidance:
 
 1. **Closed-Form ZEM/ZEV Guidance**:
-   $$\mathbf{a}_{\text{thrust}}(t) = \frac{6}{t_{\text{go}}^2} \mathbf{ZEM}(t) - \frac{2}{t_{\text{go}}} \mathbf{ZEV}(t)$$
+   $$
+   \mathbf{a}_{\text{thrust}}(t) = \frac{6}{t_{\text{go}}^2} \mathbf{ZEM}(t) - \frac{2}{t_{\text{go}}} \mathbf{ZEV}(t)
+   $$
    where:
-   $$\mathbf{ZEM}(t) = \mathbf{p}_f - \left( \mathbf{p}(t) + \mathbf{v}(t) t_{\text{go}} + \frac{1}{2} \mathbf{g}_W t_{\text{go}}^2 \right)$$
-   $$\mathbf{ZEV}(t) = \mathbf{v}_f - \left( \mathbf{v}(t) + \mathbf{g}_W t_{\text{go}} \right)$$
+   $$
+   \mathbf{ZEM}(t) = \mathbf{p}_f - \left( \mathbf{p}(t) + \mathbf{v}(t) t_{\text{go}} + \frac{1}{2} \mathbf{g}_W t_{\text{go}}^2 \right)
+   $$
+   $$
+   \mathbf{ZEV}(t) = \mathbf{v}_f - \left( \mathbf{v}(t) + \mathbf{g}_W t_{\text{go}} \right)
+   $$
 
 2. **$O(1)$ Convex Peak Acceleration & Bisection $T_f^*$ Solver**:
+
+
    Because $\mathbf{a}_{\text{thrust}}(\tau) = \mathbf{c}_0 + \mathbf{c}_1 \tau$ is affine in time, its norm squared is strictly convex. The maximum acceleration on $\tau \in [0, t_{\text{go}}]$ occurs strictly at the boundaries:
-   $$\max_{\tau \in [0, t_{\text{go}}]} \|\mathbf{a}_{\text{thrust}}(\tau)\| = \max\left( \|\mathbf{a}_{\text{thrust}}(0)\|, \; \|\mathbf{a}_{\text{thrust}}(t_{\text{go}})\| \right)$$
+   $$
+   \max_{\tau \in [0, t_{\text{go}}]} \|\mathbf{a}_{\text{thrust}}(\tau)\| = \max\left( \|\mathbf{a}_{\text{thrust}}(0)\|, \; \|\mathbf{a}_{\text{thrust}}(t_{\text{go}})\| \right)
+   $$
    where:
-   $$\mathbf{a}_{\text{thrust}}(0) = \frac{6}{t_{\text{go}}^2}\mathbf{ZEM} - \frac{2}{t_{\text{go}}}\mathbf{ZEV}, \quad \mathbf{a}_{\text{thrust}}(t_{\text{go}}) = -\frac{6}{t_{\text{go}}^2}\mathbf{ZEM} + \frac{4}{t_{\text{go}}}\mathbf{ZEV}$$
+   $$
+   \mathbf{a}_{\text{thrust}}(0) = \frac{6}{t_{\text{go}}^2}\mathbf{ZEM} - \frac{2}{t_{\text{go}}}\mathbf{ZEV}, \quad \mathbf{a}_{\text{thrust}}(t_{\text{go}}) = -\frac{6}{t_{\text{go}}^2}\mathbf{ZEM} + \frac{4}{t_{\text{go}}}\mathbf{ZEV}
+   $$
    This enables instantaneous $O(1)$ feasibility checks, allowing a bisection search to determine the minimum flight time $T_f^*$ subject to $a_{\max} \approx 15.85\,\text{m/s}^2$ ($T_{\max} = 600\,\text{N}$, $\theta_{\max} = 35^\circ$) in $< 15$ iterations.
 
 3. **$SE(3)$ Geometric Tracking Controller (Lee et al., 2010)**:
@@ -178,7 +200,9 @@ ALL PHASE 2 UNIT TESTS PASSED SUCCESSFULLY!
 Phase 3 formulates finite-horizon optimal control directly handling state and actuator boundaries:
 1. **Multiple Shooting Discretization**:
    - 4th-order Runge-Kutta (RK4) integration defect constraints:
-     $$\mathbf{x}_{k+1} - \mathbf{F}_{\text{RK4}}(\mathbf{x}_k, \mathbf{u}_k, \Delta t) = \mathbf{0}, \quad k = 0, \dots, N-1$$
+   $$
+     \mathbf{x}_{k+1} - \mathbf{F}_{\text{RK4}}(\mathbf{x}_k, \mathbf{u}_k, \Delta t) = \mathbf{0}, \quad k = 0, \dots, N-1
+   $$
 2. **Hard Inequality Constraints**:
    - Ground collision avoidance: $z_k \ge z_{\min} = 0.04\,\text{m}$ ($\forall k$)
    - 2nd-order cone tilt angle limit: $\sqrt{u_{x,k}^2 + u_{y,k}^2} \le u_{z,k} \tan(35^\circ)$
