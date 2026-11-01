@@ -37,13 +37,13 @@ $$\mathbf{x} = [\mathbf{p}_W^T, \; \mathbf{v}_W^T, \; \mathbf{q}^T, \; \boldsymb
 
    $$\dot{\mathbf{p}}_W = \mathbf{v}_W$$
 
-   $$m \dot{\mathbf{v}}_W = m \mathbf{g}_W + \mathbf{R}_{WB}(\mathbf{q}) \begin{bmatrix} 0 \\ 0 \\ T \end{bmatrix} - \mathbf{D}_v \mathbf{v}_W$$
+   $$m \dot{\mathbf{v}}_W = m \mathbf{g}_W + \mathbf{R}_{WB}(\mathbf{q}) \begin{bmatrix} 0 \\\\ 0 \\\\ T \end{bmatrix} - \mathbf{D}_v \mathbf{v}_W$$
 
    where $m = 31.0\,\text{kg}$ ($30.0\,\text{kg}$ airframe + $1.0\,\text{kg}$ delivery payload), $T$ is total rotor thrust, and $\mathbf{D}_v = \text{diag}(0.1, 0.1, 0.1)\,\text{N}\cdot\text{s/m}$ is aerodynamic damping.
 
 2. **Rotational Dynamics**:
 
-   $$\dot{\mathbf{q}} = \frac{1}{2} \mathbf{q} \otimes \begin{bmatrix} 0 \\ \boldsymbol{\Omega}_B \end{bmatrix}$$
+   $$\dot{\mathbf{q}} = \frac{1}{2} \mathbf{q} \otimes \begin{bmatrix} 0 \\\\ \boldsymbol{\Omega}_B \end{bmatrix}$$
 
    $$\mathbf{J} \dot{\boldsymbol{\Omega}}_B = -\boldsymbol{\Omega}_B \times (\mathbf{J} \boldsymbol{\Omega}_B) + \boldsymbol{\tau}_B$$
 
