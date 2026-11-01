@@ -301,8 +301,10 @@ The table below presents the quantitative benchmark results across all three con
 | **Minimum Altitude ($z_{\min}$)** | $0.0483\,\text{m}$ | $0.0481\,\text{m}$ | **$0.0487\,\text{m}$** | Zero ground crash ($\ge 0.0\,\text{m}$) | **PASS** |
 | **Total Control Effort ($\int T^2 dt$)** | $1,307,237.4\,\text{N}^2\cdot\text{s}$ | $495,969.8\,\text{N}^2\cdot\text{s}$ | **$621,136.1\,\text{N}^2\cdot\text{s}$** | **$+52.5\%$ (ENERGY SAVED)** | **PASS** |
 | **Total Input Impulse** | $21.8313\,\text{N}\cdot\text{s}$ | $14.7514\,\text{N}\cdot\text{s}$ | **$52.9684\,\text{N}\cdot\text{s}$** | Active receding horizon control | **PASS** |
-| **Mean Solve Time (Warm)** | N/A (Analytical) | $< 0.1\,\text{ms}$ ($O(1)$) | **$14.03\,\text{ms}$** | Real-time feasible ($71.3\,\text{Hz}$) | **PASS** ($< 25\,\text{ms}$) |
-| **Peak Solve Time** | N/A | $< 0.1\,\text{ms}$ | **$30.66\,\text{ms}$** | Strict upper bound | **PASS** ($< 35\,\text{ms}$) |
+| **NMPC Optimal Success Rate** | N/A | N/A | **$100.0\%$ (84/84 Solved)** | Zero IPOPT divergence | **PASS** |
+| **ZEM/ZEV Fallback Rate** | N/A | N/A | **$0.0\%$ (0/84 Switched)** | 100% pure NMPC flight | **PASS** |
+| **Mean Solve Time (Warm)** | N/A (Analytical) | $< 0.1\,\text{ms}$ ($O(1)$) | **$15.46\,\text{ms}$** | Real-time feasible ($64.7\,\text{Hz}$) | **PASS** ($< 25\,\text{ms}$) |
+| **Peak Solve Time** | N/A | $< 0.1\,\text{ms}$ | **$32.76\,\text{ms}$** | Strict upper bound | **PASS** ($< 35\,\text{ms}$) |
 | **Hard Constraint Enforcement** | Heuristic clipping | Heuristic saturation | **Exact Optimization Constraints** | Mathematically guaranteed | **SUPERIOR** |
 | **Mission Success Status** | **SUCCESS** | **SUCCESS** | **SUCCESS** | **All Benchmark Criteria Met** | **ALL PASSED** |
 
