@@ -39,7 +39,7 @@ $$\mathbf{x} = [\mathbf{p}_W^T, \; \mathbf{v}_W^T, \; \mathbf{q}^T, \; \boldsymb
 
    $$m \dot{\mathbf{v}}_W = m \mathbf{g}_W + \mathbf{R}_{WB}(\mathbf{q}) \begin{bmatrix} 0 \\\\ 0 \\\\ T \end{bmatrix} - \mathbf{D}_v \mathbf{v}_W$$
 
-   where $m = 31.0\,\text{kg}$ ($30.0\,\text{kg}$ airframe + $1.0\,\text{kg}$ delivery payload), $T$ is total rotor thrust, and $\mathbf{D}_v = \text{diag}(0.1, 0.1, 0.1)\,\text{N}\cdot\text{s/m}$ is aerodynamic damping.
+   where $m = 31.0\,\text{kg}$ ($30.0\,\text{kg}$ airframe + $1.0\,\text{kg}$ delivery payload), $T$ is total rotor thrust, and $\mathbf{D}_v = \text{diag}(0.1, 0.1, 0.1)\\,\text{N}\cdot\text{s/m}$ is aerodynamic damping.
 
 2. **Rotational Dynamics**:
 
@@ -47,12 +47,12 @@ $$\mathbf{x} = [\mathbf{p}_W^T, \; \mathbf{v}_W^T, \; \mathbf{q}^T, \; \boldsymb
 
    $$\mathbf{J} \dot{\boldsymbol{\Omega}}_B = -\boldsymbol{\Omega}_B \times (\mathbf{J} \boldsymbol{\Omega}_B) + \boldsymbol{\tau}_B$$
 
-   where $\mathbf{J} = \text{diag}(1.25, 1.25, 2.50)\,\text{kg}\cdot\text{m}^2$ is the moment of inertia tensor and $\boldsymbol{\tau}_B = [\tau_x, \tau_y, \tau_z]^T$ is the 3-axis control moment.
+   where $\mathbf{J} = \text{diag}(1.25, 1.25, 2.50)\\,\text{kg}\cdot\text{m}^2$ is the moment of inertia tensor and $\boldsymbol{\tau}_B = [\tau_x, \tau_y, \tau_z]^T$ is the 3-axis control moment.
 
 3. **Multi-Rate Numerical Integration**:
-   - Physics integration: 4th-Order Runge-Kutta (RK4) at $200\,\text{Hz}$ ($\Delta t_{\text{sim}} = 0.005\,\text{s}$).
-   - Control loop update: $50\,\text{Hz}$ ($\Delta t_{\text{ctrl}} = 0.020\,\text{s}$).
-   - Inelastic ground boundary contact condition at $z \le 0.0\,\text{m}$.
+   - Physics integration: 4th-Order Runge-Kutta (RK4) at $200\\,\text{Hz}$ ($\Delta t_{\text{sim}} = 0.005\\,\text{s}$).
+   - Control loop update: $50\\,\text{Hz}$ ($\Delta t_{\text{ctrl}} = 0.020\\,\text{s}$).
+   - Inelastic ground boundary contact condition at $z \le 0.0\\,\text{m}$.
 
 ---
 
@@ -102,14 +102,18 @@ drone-trajectory-control/
 ## 4. Phase 1 Implementation: Baseline Decoupled PID
 
 ### (1) Problem Formulation & Key Findings
-In legacy MATLAB simulations, 3-DOF point-mass approximations relied on artificial velocity clamping (`vel(1:2) = 0` and `pos(3) = z_hold`). When deployed on high-mass ($31.0\,\text{kg}$) 6-DOF dynamics, naive point-to-point PID suffered from severe **pitch-altitude coupling**: pitching down to accelerate accumulated excessive horizontal momentum ($p_x \approx 280\,\text{kg}\cdot\text{m/s}$), and braking reverse-pitching caused immediate loss of vertical lift ($T\cos\theta$), plunging the drone into ground crashes ($z \le 0$).
+In legacy MATLAB simulations, 3-DOF point-mass approximations relied on artificial velocity clamping (`vel(1:2) = 0` and `pos(3) = z_hold`).
+When deployed on high-mass ($31.0\\,\text{kg}$) 6-DOF dynamics,
+naive point-to-point PID suffered from severe **pitch-altitude coupling**:
+pitching down to accelerate accumulated excessive horizontal momentum ($p_x \\approx 280\\,\text{kg}\cdot\text{m/s}$),
+and braking reverse-pitching caused immediate loss of vertical lift ($T\\cos\\theta$), plunging the drone into ground crashes ($z \\le 0$).
 
 ### (2) 3-Phase Decoupling & Ground Flare Solution
-1. **Phase 1 (Vertical Descent)**: $(-10, 0, 10) \to (-10, 0, 5)\,\text{m}$ without pitching.
-2. **Phase 2 (Horizontal Cruise)**: Altitude locked at $z = 5.0\,\text{m}$ with cruise speed bounded to $v_x \le 3.6\,\text{m/s}$. Horizontal velocity fully arrested over the target pad ($|v_x| < 0.6\,\text{m/s}$).
+1. **Phase 1 (Vertical Descent)**: $(-10, 0, 10) \to (-10, 0, 5)\\,\text{m}$ without pitching.
+2. **Phase 2 (Horizontal Cruise)**: Altitude locked at $z = 5.0\\,\text{m}$ with cruise speed bounded to $v_x \\le 3.6\\,\text{m/s}$. Horizontal velocity fully arrested over the target pad ($|v_x| < 0.6\\,\text{m/s}$).
 3. **Phase 3 (Precision Flare Landing)**: Pure vertical descent over pad with altitude-dependent flare sink-rate regulation:
 
-   $$v_{z,\text{des}}(z) = -\text{clip}(0.12 + 0.50 z, \; 0.12, \; 2.2)\quad [\text{m/s}]$$
+   $$v_{z,\text{des}}(z) = -\text{clip}(0.12 + 0.50 z, \\; 0.12, \\; 2.2)\quad [\text{m/s}]$$
 
 ### (3) Baseline Verification Scoreboard
 ```
@@ -152,7 +156,7 @@ Phase 2 upgrades trajectory generation from heuristic waypoint FSMs to analytica
 
    Because $\mathbf{a}\_{\mathrm{thrust}}(\tau) = \mathbf{c}\_{0} + \mathbf{c}\_{1} \tau$ is affine in time, its norm squared is strictly convex. The maximum acceleration on $\tau \in [0, t\_{\mathrm{go}}]$ occurs strictly at the boundaries:
 
-   $$\max\_{\tau \in [0, t\_{\mathrm{go}}]} \|\mathbf{a}\_{\mathrm{thrust}}(\tau)\| = \max\left( \|\mathbf{a}\_{\mathrm{thrust}}(0)\|, \; \|\mathbf{a}\_{\mathrm{thrust}}(t\_{\mathrm{go}})\| \right)$$
+   $$\max\_{\tau \in [0, t\_{\mathrm{go}}]} \|\mathbf{a}\_{\mathrm{thrust}}(\tau)\| = \max\left( \|\mathbf{a}\_{\mathrm{thrust}}(0)\|, \\; \|\mathbf{a}\_{\mathrm{thrust}}(t\_{\mathrm{go}})\| \right)$$
 
    where:
 
@@ -195,16 +199,16 @@ Phase 3 formulates finite-horizon optimal control directly handling state and ac
 1. **Multiple Shooting Discretization**:
    - 4th-order Runge-Kutta (RK4) integration defect constraints:
 
-   $$\mathbf{x}\_{k+1} - \mathbf{F}\_{\mathrm{RK4}}(\mathbf{x}\_k, \mathbf{u}\_k, \Delta t) = \mathbf{0}, \quad k = 0, \dots, N-1$$
+     $$\mathbf{x}\_{k+1} - \mathbf{F}\_{\mathrm{RK4}}(\mathbf{x}\_k, \mathbf{u}\_k, \Delta t) = \mathbf{0}, \quad k = 0, \dots, N-1$$
 
 2. **Hard Inequality Constraints**:
    - Ground collision avoidance: $z_k \ge z_{\min} = 0.04\,\mathrm{m}$ ($\forall k$)
    - 2nd-order cone tilt angle limit: $\sqrt{u_{x,k}^2 + u_{y,k}^2} \le u_{z,k} \tan(35^\circ)$
    - Total motor thrust saturation: $\|\mathbf{u}\_k\| \le \frac{T\_{\max}}{m} \approx 19.35\\,\mathrm{m/s}^2$
-   - Terminal soft touchdown velocity: $v_{z,N} \ge -0.20\,\mathrm{m/s}$
+   - Terminal soft touchdown velocity: $v_{z,N} \ge -0.20\\,\mathrm{m/s}$
 3. **Warm-Starting & Glideslope Reference Governor**:
-   - Solution shifting ( $\mathbf{w}\_{\mathrm{init}} = [\mathbf{x}^{\ast}\_{1:N}, \mathbf{u}^{\ast}\_{1:N-1}]$ ) enables fast &lt; 16 ms mean IPOPT solve times ($64.7\,\mathrm{Hz}$ RHC).
-   - Altitude reference governor maintains safe glideslope buffer until pad alignment ($r_{xy} \le 0.25\,\mathrm{m}$) before initiating terminal flare soft touchdown.
+   - Solution shifting ( $\mathbf{w}\_{\mathrm{init}} = [\mathbf{x}^{\ast}\_{1:N}, \mathbf{u}^{\ast}\_{1:N-1}]$ ) enables fast &lt; 16 ms mean IPOPT solve times ($64.7\\,\mathrm{Hz}$ RHC).
+   - Altitude reference governor maintains safe glideslope buffer until pad alignment ($r_{xy} \le 0.25\\,\mathrm{m}$) before initiating terminal flare soft touchdown.
 
 ### (2) Phase 3 Unit Test Verification (`tests/test_nmpc.py`)
 ```
@@ -245,21 +249,21 @@ Peak Solve Time across Mission:      32.76 ms (< 35.0 ms real-time ceiling)
 ```
 
 ### (2) Quantitative Benchmark Scoreboard
-The table below presents the quantitative benchmark results across all three control paradigms under identical 6-DOF simulation conditions (`start_pos = [-10, 0, 10] m`, `target_pos = [0, 0, 0] m`, mass $31.0\,\text{kg}$, 200 Hz RK4 integration):
+The table below presents the quantitative benchmark results across all three control paradigms under identical 6-DOF simulation conditions (`start_pos = [-10, 0, 10] m`, `target_pos = [0, 0, 0] m`, mass $31.0\\,\text{kg}$, 200 Hz RK4 integration):
 
 | Performance Metric | Phase 1 (Baseline PID) | Phase 2 (ZEM/ZEV + $SE(3)$) | Phase 3 (CasADi NMPC) | Improvement vs PID | Evaluation Status |
 |:---|:---:|:---:|:---:|:---:|:---:|
-| **Total Flight Time ($T_f$)** | $13.66\,\text{s}$ | $4.94\,\text{s}$ | **$5.02\,\text{s}$** | **$+63.3\%$ (FASTER)** | **PASS** ($< 6.0\,\text{s}$) |
-| **Landing Position Error** | $0.0483\,\text{m}$ | $0.0487\,\text{m}$ | **$0.0497\,\text{m}$** | **$4.97\,\text{cm}$ (Radial error $1.0\,\text{cm}$)** | **PASS** ($< 0.05\,\text{m}$) |
-| **Touchdown Velocity ($v_z$)** | $-0.1737\,\text{m/s}$ | $-0.1649\,\text{m/s}$ | **$-0.1555\,\text{m/s}$** | Ideal soft landing ($< 0.20\,\text{m/s}$) | **PASS** |
+| **Total Flight Time ($T_f$)** | $13.66\\,\text{s}$ | $4.94\\,\text{s}$ | **$5.02\\,\text{s}$** | **$+63.3\%$ (FASTER)** | **PASS** ($< 6.0\\,\text{s}$) |
+| **Landing Position Error** | $0.0483\\,\text{m}$ | $0.0487\\,\text{m}$ | **$0.0497\\,\text{m}$** | **$4.97\\,\text{cm}$ (Radial error $1.0\\,\text{cm}$)** | **PASS** ($< 0.05\\,\text{m}$) |
+| **Touchdown Velocity ($v_z$)** | $-0.1737\\,\text{m/s}$ | $-0.1649\\,\text{m/s}$ | **$-0.1555\\,\text{m/s}$** | Ideal soft landing ($< 0.20\\,\text{m/s}$) | **PASS** |
 | **Final Attitude Tilt Angle** | $0.00^\circ$ | $0.34^\circ$ | **$0.20^\circ$** | Upright terminal landing | **PASS** ($< 2.0^\circ$) |
-| **Minimum Altitude ($z_{\min}$)** | $0.0483\,\text{m}$ | $0.0481\,\text{m}$ | **$0.0487\,\text{m}$** | Zero ground crash ($\ge 0.0\,\text{m}$) | **PASS** |
-| **Total Control Effort ($\int T^2 dt$)** | $1,307,237.4\,\text{N}^2\cdot\text{s}$ | $495,969.8\,\text{N}^2\cdot\text{s}$ | **$621,136.1\,\text{N}^2\cdot\text{s}$** | **$+52.5\%$ (ENERGY SAVED)** | **PASS** |
-| **Total Input Impulse** | $21.8313\,\text{N}\cdot\text{s}$ | $14.7514\,\text{N}\cdot\text{s}$ | **$52.9684\,\text{N}\cdot\text{s}$** | Active receding horizon control | **PASS** |
+| **Minimum Altitude ($z_{\min}$)** | $0.0483\\,\text{m}$ | $0.0481\\,\text{m}$ | **$0.0487\\,\text{m}$** | Zero ground crash ($\ge 0.0\\,\text{m}$) | **PASS** |
+| **Total Control Effort ($\int T^2 dt$)** | $1,307,237.4\\,\text{N}^2\cdot\text{s}$ | $495,969.8\\,\text{N}^2\cdot\text{s}$ | **$621,136.1\\,\text{N}^2\cdot\text{s}$** | **$+52.5\%$ (ENERGY SAVED)** | **PASS** |
+| **Total Input Impulse** | $21.8313\\,\text{N}\cdot\text{s}$ | $14.7514\\,\text{N}\cdot\text{s}$ | **$52.9684\\,\text{N}\cdot\text{s}$** | Active receding horizon control | **PASS** |
 | **NMPC Optimal Success Rate** | N/A | N/A | **$100.0\%$ (84/84 Solved)** | Zero IPOPT divergence | **PASS** |
 | **ZEM/ZEV Fallback Rate** | N/A | N/A | **$0.0\%$ (0/84 Switched)** | 100% pure NMPC flight | **PASS** |
-| **Mean Solve Time (Warm)** | N/A (Analytical) | $< 0.1\,\text{ms}$ ($O(1)$) | **$15.46\,\text{ms}$** | Real-time feasible ($64.7\,\text{Hz}$) | **PASS** ($< 25\,\text{ms}$) |
-| **Peak Solve Time** | N/A | $< 0.1\,\text{ms}$ | **$32.76\,\text{ms}$** | Strict upper bound | **PASS** ($< 35\,\text{ms}$) |
+| **Mean Solve Time (Warm)** | N/A (Analytical) | $< 0.1\\,\text{ms}$ ($O(1)$) | **$15.46\\,\text{ms}$** | Real-time feasible ($64.7\\,\text{Hz}$) | **PASS** ($< 25\\,\text{ms}$) |
+| **Peak Solve Time** | N/A | $< 0.1\\,\text{ms}$ | **$32.76\\,\text{ms}$** | Strict upper bound | **PASS** ($< 35\,\text{ms}$) |
 | **Hard Constraint Enforcement** | Heuristic clipping | Heuristic saturation | **Exact Optimization Constraints** | Mathematically guaranteed | **SUPERIOR** |
 | **Mission Success Status** | **SUCCESS** | **SUCCESS** | **SUCCESS** | **All Benchmark Criteria Met** | **ALL PASSED** |
 
