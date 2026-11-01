@@ -1,0 +1,46 @@
+# ==============================================================================
+# Git Ignore Configuration for 6-DOF Drone Trajectory Control Architecture
+# ==============================================================================
+
+# Python Bytecode & Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# Virtual Environments (Dependencies captured in requirements.txt)
+.venv/
+venv/
+ENV/
+env/
+env.bak/
+venv.bak/
+
+# macOS System Files
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+Icon?
+Thumbs.db
+
+# IDE & Editor Settings
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+*~
+
+# Temporary & Output Media Files (Keep folder structure via .gitkeep)
+results/*.png
+results/*.mp4
+results/*.gif
+!results/.gitkeep
+
+# Build / Distribution
+build/
+dist/
+*.egg-info/
