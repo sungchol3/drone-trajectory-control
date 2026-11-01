@@ -140,7 +140,7 @@ Phase 2 upgrades trajectory generation from heuristic waypoint FSMs to analytica
 
 1. **Closed-Form ZEM/ZEV Guidance**:
 
-   $$\mathbf{a}_{\mathrm{thrust}}(t) = \frac{6}{t_{\mathrm{go}}^2} \mathbf{ZEM}(t) - \frac{2}{t_{\mathrm{go}}} \mathbf{ZEV}(t)$$
+   $$\mathbf{a}\_{\mathrm{thrust}}(t) = \frac{6}{t\_{\mathrm{go}}^2} \mathbf{ZEM}(t) - \frac{2}{t\_{\mathrm{go}}} \mathbf{ZEV}(t)$$
 
    where:
 
@@ -158,7 +158,7 @@ Phase 2 upgrades trajectory generation from heuristic waypoint FSMs to analytica
 
    $$\mathbf{a}_{\mathrm{thrust}}(0) = \frac{6}{t_{\mathrm{go}}^2}\mathbf{ZEM} - \frac{2}{t_{\mathrm{go}}}\mathbf{ZEV}, \quad \mathbf{a}_{\mathrm{thrust}}(t_{\mathrm{go}}) = -\frac{6}{t_{\mathrm{go}}^2}\mathbf{ZEM} + \frac{4}{t_{\mathrm{go}}}\mathbf{ZEV}$$
 
-   This enables instantaneous $O(1)$ feasibility checks, allowing a bisection search to determine the minimum flight time $T_f^*$ subject to $a_{\max} \approx 15.85\,\text{m/s}^2$ ($T_{\max} = 600\,\text{N}$, $\theta_{\max} = 35^\circ$) in $< 15$ iterations.
+   This enables instantaneous $O(1)$ feasibility checks, allowing a bisection search to determine the minimum flight time $T_f^*$ subject to $a_{\max} \approx 15.85\,\text{m/s}^2$ ($T_{\max} = 600\,\text{N}$, $\theta_{\max} = 35^\circ$) in &lt; 15 iterations.
 
 3. **$SE(3)$ Geometric Tracking Controller (Lee et al., 2010)**:
    - Orthonormal basis on $SO(3)$: $\mathbf{b}_{3,d} = \mathbf{a}_{\mathrm{thrust}} / \|\mathbf{a}_{\mathrm{thrust}}\|$, $\mathbf{b}_{2,d} = (\mathbf{b}_{3,d} \times \mathbf{b}_{1,c}) / \|\mathbf{b}_{3,d} \times \mathbf{b}_{1,c}\|$, $\mathbf{b}_{1,d} = \mathbf{b}_{2,d} \times \mathbf{b}_{3,d}$.
