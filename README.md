@@ -37,13 +37,21 @@ $$\mathbf{x} = [\mathbf{p}_W^T, \\; \mathbf{v}_W^T, \\; \mathbf{q}^T, \\; \bolds
 
    $$\dot{\mathbf{p}}_W = \mathbf{v}_W$$
 
+   <p align="center">
+
    ![translational dynamics equation](equations/translational_dynamics_eq2.svg)
+
+   </p>
 
    where $m = 31.0\\,\text{kg}$ ($30.0\\,\text{kg}$ airframe + $1.0\\,\text{kg}$ delivery payload), $T$ is total rotor thrust, and $\mathbf{D}_v = \text{diag}(0.1, 0.1, 0.1)\\,\text{N}\cdot\text{s/m}$ is aerodynamic damping.
 
 2. **Rotational Dynamics**:
 
+   <p align="center">
+
    ![\dot{\mathbf{q}} = \frac{1}{2} \mathbf{q} \otimes \begin{bmatrix} 0 \\\\ \boldsymbol{\Omega}_B \end{bmatrix}](equations/rotational_dynamics_eq1.svg)
+
+   </p>
 
    $$\mathbf{J} \dot{\boldsymbol{\Omega}}_B = -\boldsymbol{\Omega}_B \times (\mathbf{J} \boldsymbol{\Omega}_B) + \boldsymbol{\tau}_B$$
 
