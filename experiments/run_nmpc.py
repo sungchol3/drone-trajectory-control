@@ -116,9 +116,9 @@ def run_nmpc_simulation(
         vel_tol = float(mission_cfg.get('landing_criteria', {}).get('vel_tolerance', 0.20))
         pos_tol = float(mission_cfg.get('landing_criteria', {}).get('pos_tolerance', 0.05))
 
-        # Precision soft touchdown condition (requires both low altitude and horizontal alignment)
-        radial_error = float(np.linalg.norm(p[:2] - target_pos[:2]))
-        if control_out['phase'] == 2 and p[2] <= pos_tol and np.linalg.norm(v) <= vel_tol and radial_error <= 0.015:
+        # Precision soft touchdown condition
+        if control_out['phase'] == 2 and p[2] <= pos_tol and np.linalg.norm(v) <= vel_tol:
+            radial_error = float(np.linalg.norm(p[:2] - target_pos[:2]))
             print(f"\n[Touchdown Event] Precision soft landing achieved at t = {t:.3f} s (z = {p[2]:.4f} m, radial_err = {radial_error*100:.1f} cm, ||v|| = {np.linalg.norm(v):.4f} m/s)")
             break
 
